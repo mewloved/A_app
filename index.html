@@ -8,21 +8,22 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --ink: #1a1a1a;
-  --paper: #f5f0e8;
-  --cream: #ede8dc;
-  --accent: #c0392b;
-  --gold: #b8860b;
-  --muted: #8a8070;
-  --line: #d4cfc4;
-  --white: #fff;
-  --green: #2ecc71;
+  --bg:      #ffffff;
+  --navy:    #0d1b2e;
+  --navy2:   #1a2d45;
+  --accent:  #c8102e;
+  --surface: #f4f7fb;
+  --surface2:#eaf0f8;
+  --border:  #dde3ed;
+  --muted:   #7a8b9e;
+  --gold:    #9a7b4f;
+  --nav-h:   68px;
 }
 
 body {
   font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--bg);
+  color: var(--navy);
   min-height: 100vh;
   -webkit-text-size-adjust: 100%;
 }
@@ -33,70 +34,82 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-bottom: 80px;
+  padding-bottom: calc(var(--nav-h) + 12px);
 }
 
 /* ── HEADER ── */
 .header {
-  padding: 22px 20px 14px;
-  border-bottom: 1px solid var(--line);
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   position: sticky;
   top: 0;
-  background: var(--paper);
+  background: var(--bg);
   z-index: 100;
 }
 
-.logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
-.logo em { color: var(--accent); font-style: italic; font-weight: 400; }
-.today-label { font-size: 11px; color: var(--muted); letter-spacing: 0.05em; }
-
-/* ── TABS ── */
-.tabs {
+.logo {
   display: flex;
-  border-bottom: 1px solid var(--line);
+  align-items: baseline;
+  gap: 1px;
 }
 
-.tab {
-  flex: 1;
-  padding: 12px;
-  text-align: center;
+.logo-mark {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-right: 8px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.logo-text {
   font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  cursor: pointer;
-  border: none;
-  background: none;
-  border-bottom: 2px solid transparent;
-  transition: all .2s;
-  letter-spacing: 0.02em;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: var(--navy);
+  text-transform: uppercase;
 }
 
-.tab.active {
-  color: var(--ink);
-  border-bottom-color: var(--accent);
+.logo-sub {
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-transform: lowercase;
+  margin-left: 5px;
+}
+
+.today-label {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.07em;
+  font-weight: 500;
 }
 
 /* ── PANELS ── */
-.panel { display: none; padding: 20px; }
+.panel { display: none; padding: 22px; }
 .panel.active { display: block; }
 
 /* ── RECORDER ── */
 .recorder-panel { text-align: center; }
 
 .rec-date {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--muted);
-  margin-bottom: 6px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  font-weight: 500;
 }
 
 .mic-wrap {
-  margin: 24px auto;
-  width: 90px;
-  height: 90px;
+  margin: 28px auto 8px;
+  width: 110px;
+  height: 110px;
   position: relative;
   display: flex;
   align-items: center;
@@ -104,77 +117,85 @@ body {
 }
 
 .mic-btn {
-  width: 80px;
-  height: 80px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   border: none;
-  background: var(--ink);
+  background: var(--navy);
   color: #fff;
-  font-size: 28px;
   cursor: pointer;
-  transition: background .2s, transform .1s;
+  transition: background .2s, transform .12s, box-shadow .2s;
   position: relative;
   z-index: 1;
   -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 6px 24px rgba(13,27,46,.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.mic-btn:active { transform: scale(.95); }
+.mic-btn svg { pointer-events: none; }
+
+.mic-btn:active { transform: scale(.94); }
 
 .mic-btn.recording {
   background: var(--accent);
+  box-shadow: 0 6px 28px rgba(200,16,46,.30);
 }
 
 .mic-btn.recording::before,
 .mic-btn.recording::after {
   content: '';
   position: absolute;
-  inset: -8px;
+  inset: -10px;
   border-radius: 50%;
-  border: 2px solid var(--accent);
-  animation: ripple 1.4s ease-out infinite;
+  border: 1.5px solid var(--accent);
+  animation: ripple 1.5s ease-out infinite;
+  opacity: 0;
 }
 
-.mic-btn.recording::after {
-  animation-delay: .7s;
-}
+.mic-btn.recording::after { animation-delay: .75s; }
 
 @keyframes ripple {
-  0%  { transform: scale(1); opacity: .6; }
-  100%{ transform: scale(1.6); opacity: 0; }
+  0%  { transform: scale(1); opacity: .5; }
+  100%{ transform: scale(1.55); opacity: 0; }
 }
 
 .rec-status {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
-  margin-bottom: 16px;
-  min-height: 16px;
-  letter-spacing: 0.03em;
+  margin-bottom: 20px;
+  min-height: 14px;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+  text-transform: uppercase;
 }
 
 .rec-status.on { color: var(--accent); }
 
 .transcript-box {
-  background: var(--cream);
-  border-radius: 12px;
-  padding: 16px;
-  min-height: 100px;
-  max-height: 180px;
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 18px;
+  min-height: 110px;
+  max-height: 190px;
   overflow-y: auto;
   text-align: left;
   font-size: 15px;
-  line-height: 1.65;
+  line-height: 1.7;
   white-space: pre-wrap;
   word-break: break-all;
-  color: var(--ink);
-  margin-bottom: 14px;
-  border: 1px solid var(--line);
+  color: var(--navy);
+  margin-bottom: 16px;
+  border: 1.5px solid var(--border);
   cursor: text;
   outline: none;
-  transition: border-color .2s;
+  transition: border-color .2s, box-shadow .2s;
 }
 
 .transcript-box:focus {
-  border-color: var(--ink);
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(13,27,46,.06);
 }
 
 .transcript-box.empty::after {
@@ -184,54 +205,6 @@ body {
   pointer-events: none;
 }
 
-/* ── INLINE EDIT ── */
-.entry-edit-area {
-  width: 100%;
-  background: var(--paper);
-  border: 1.5px solid var(--ink);
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 14px;
-  line-height: 1.6;
-  font-family: inherit;
-  color: var(--ink);
-  resize: vertical;
-  min-height: 80px;
-  outline: none;
-}
-
-.btn-edit {
-  font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--line);
-  background: none;
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.btn-edit:hover { color: var(--gold); border-color: var(--gold); }
-
-.btn-edit-save {
-  font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: none;
-  background: var(--ink);
-  color: #fff;
-  cursor: pointer;
-}
-
-.btn-edit-cancel {
-  font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--line);
-  background: none;
-  color: var(--muted);
-  cursor: pointer;
-}
-
 .action-row {
   display: flex;
   gap: 10px;
@@ -239,50 +212,66 @@ body {
 }
 
 .btn {
-  padding: 11px 24px;
+  padding: 13px 28px;
   border: none;
-  border-radius: 8px;
+  border-radius: 50px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity .2s, transform .1s;
+  transition: opacity .18s, transform .1s, box-shadow .18s;
   -webkit-tap-highlight-color: transparent;
+  letter-spacing: 0.03em;
 }
 
-.btn:active { transform: scale(.97); }
-.btn:disabled { opacity: .4; pointer-events: none; }
+.btn:active { transform: scale(.96); }
+.btn:disabled { opacity: .35; pointer-events: none; }
 
-.btn-save { background: var(--ink); color: #fff; }
-.btn-clear { background: var(--cream); color: var(--muted); border: 1px solid var(--line); }
+.btn-save {
+  background: var(--navy);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(13,27,46,.18);
+}
+
+.btn-save:hover { box-shadow: 0 6px 20px rgba(13,27,46,.26); }
+
+.btn-clear {
+  background: var(--surface);
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+}
 
 /* ── CALENDAR ── */
 .cal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .cal-title {
   font-size: 16px;
   font-weight: 700;
-  letter-spacing: -0.3px;
+  letter-spacing: 0.01em;
+  color: var(--navy);
 }
 
 .cal-nav {
-  background: none;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  width: 34px;
+  height: 34px;
   font-size: 16px;
-  color: var(--ink);
+  color: var(--navy);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
+  transition: background .15s;
 }
+
+.cal-nav:hover { background: var(--surface2); }
 
 .cal-grid {
   display: grid;
@@ -293,14 +282,15 @@ body {
 .cal-dow {
   text-align: center;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--muted);
-  padding: 4px 0 8px;
-  letter-spacing: 0.06em;
+  padding: 4px 0 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.cal-dow:first-child { color: #e74c3c; }
-.cal-dow:last-child  { color: #3498db; }
+.cal-dow:first-child { color: #c0392b; }
+.cal-dow:last-child  { color: #2980b9; }
 
 .cal-cell {
   aspect-ratio: 1;
@@ -308,130 +298,134 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 13px;
   cursor: pointer;
   position: relative;
   transition: background .15s;
   -webkit-tap-highlight-color: transparent;
-  gap: 2px;
+  gap: 3px;
+  font-weight: 500;
 }
 
-.cal-cell:hover { background: var(--cream); }
-
+.cal-cell:hover { background: var(--surface); }
 .cal-cell.empty { pointer-events: none; }
 
 .cal-cell.today {
-  font-weight: 700;
-  background: var(--cream);
-  border: 1.5px solid var(--line);
+  font-weight: 800;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
 }
 
 .cal-cell.selected {
-  background: var(--ink) !important;
+  background: var(--navy) !important;
   color: #fff;
 }
 
 .cal-cell.has-entry .dot {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: var(--accent);
 }
 
-.cal-cell.selected .dot {
-  background: rgba(255,255,255,.7);
-}
+.cal-cell.selected .dot { background: rgba(255,255,255,.65); }
 
-.cal-cell.sun { color: #e74c3c; }
-.cal-cell.sat { color: #3498db; }
+.cal-cell.sun { color: #c0392b; }
+.cal-cell.sat { color: #2980b9; }
 .cal-cell.selected.sun,
 .cal-cell.selected.sat { color: #fff; }
+.cal-cell.other-month { opacity: .3; }
 
-.cal-cell.other-month { opacity: .35; }
-
-/* ── SELECTED DAY ENTRIES ── */
-.day-entries {
-  margin-top: 20px;
-}
+/* ── DAY ENTRIES ── */
+.day-entries { margin-top: 22px; }
 
 .day-entries-title {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--muted);
-  letter-spacing: 0.04em;
-  margin-bottom: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
 }
 
 .day-entry-card {
-  background: var(--cream);
-  border-radius: 10px;
-  padding: 14px;
-  margin-bottom: 8px;
-  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 10px;
+  border: 1.5px solid var(--border);
   position: relative;
 }
 
 .day-entry-time {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--muted);
   margin-bottom: 6px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 .day-entry-text {
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.65;
   word-break: break-all;
   white-space: pre-wrap;
+  color: var(--navy);
 }
 
 .day-entry-del {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 12px;
+  right: 12px;
   background: none;
   border: none;
   color: var(--muted);
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 4px 7px;
+  border-radius: 8px;
   -webkit-tap-highlight-color: transparent;
+  transition: color .15s, background .15s;
 }
 
-.day-entry-del:hover { color: var(--accent); }
+.day-entry-del:hover { color: var(--accent); background: rgba(200,16,46,.07); }
 
 .no-entry-msg {
   text-align: center;
   color: var(--muted);
   font-size: 13px;
-  padding: 20px 0;
+  padding: 24px 0;
+  letter-spacing: 0.03em;
 }
 
 /* ── LIST VIEW ── */
 .list-panel .entry-card {
-  background: var(--cream);
-  border-radius: 12px;
-  padding: 16px;
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 18px;
   margin-bottom: 12px;
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--border);
   position: relative;
+  transition: box-shadow .15s;
 }
 
 .entry-card-date {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--gold);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  margin-bottom: 6px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
 }
 
 .entry-card-text {
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.65;
   word-break: break-all;
   white-space: pre-wrap;
+  color: var(--navy);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -440,7 +434,6 @@ body {
 
 .entry-card-text.expanded {
   display: block;
-  -webkit-line-clamp: unset;
 }
 
 .entry-card-more {
@@ -448,55 +441,172 @@ body {
   color: var(--accent);
   font-weight: 600;
   cursor: pointer;
-  margin-top: 4px;
+  margin-top: 5px;
   display: none;
+  letter-spacing: 0.02em;
 }
 
 .entry-card-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 10px;
+  margin-top: 12px;
   gap: 8px;
 }
 
-.btn-del {
+/* ── INLINE EDIT ── */
+.entry-edit-area {
+  width: 100%;
+  background: var(--bg);
+  border: 1.5px solid var(--navy);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.65;
+  font-family: inherit;
+  color: var(--navy);
+  resize: vertical;
+  min-height: 90px;
+  outline: none;
+  transition: box-shadow .2s;
+}
+
+.entry-edit-area:focus {
+  box-shadow: 0 0 0 3px rgba(13,27,46,.08);
+}
+
+.btn-edit {
   font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--line);
+  padding: 6px 14px;
+  border-radius: 50px;
+  border: 1.5px solid var(--border);
   background: none;
   color: var(--muted);
   cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  transition: color .15s, border-color .15s;
+}
+
+.btn-edit:hover { color: var(--navy); border-color: var(--navy); }
+
+.btn-del {
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 50px;
+  border: 1.5px solid var(--border);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  transition: color .15s, border-color .15s;
 }
 
 .btn-del:hover { color: var(--accent); border-color: var(--accent); }
 
+.btn-edit-save {
+  font-size: 12px;
+  padding: 6px 16px;
+  border-radius: 50px;
+  border: none;
+  background: var(--navy);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.btn-edit-cancel {
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 50px;
+  border: 1.5px solid var(--border);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 600;
+}
+
 .empty-list {
   text-align: center;
-  padding: 60px 20px;
+  padding: 70px 20px;
   color: var(--muted);
 }
 
-.empty-list .icon { font-size: 40px; margin-bottom: 12px; }
-.empty-list p { font-size: 14px; }
+.empty-list .icon { font-size: 36px; margin-bottom: 14px; opacity: .5; }
+.empty-list p { font-size: 14px; letter-spacing: 0.04em; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: var(--nav-h);
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 200;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color .2s;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  padding-top: 4px;
+}
+
+.nav-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 28px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 0 0 3px 3px;
+  transition: transform .2s;
+}
+
+.nav-btn.active { color: var(--navy); }
+.nav-btn.active::before { transform: translateX(-50%) scaleX(1); }
+
+.nav-icon { display: flex; align-items: center; justify-content: center; }
+.nav-label { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; }
 
 /* ── TOAST ── */
 .toast {
   position: fixed;
-  bottom: 30px;
+  bottom: calc(var(--nav-h) + 16px);
   left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--ink);
+  transform: translateX(-50%) translateY(12px);
+  background: var(--navy);
   color: #fff;
   padding: 10px 22px;
-  border-radius: 20px;
+  border-radius: 50px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   opacity: 0;
-  transition: all .3s;
+  transition: all .28s;
   pointer-events: none;
   z-index: 999;
   white-space: nowrap;
+  letter-spacing: 0.03em;
+  box-shadow: 0 4px 20px rgba(13,27,46,.22);
 }
 
 .toast.show {
@@ -504,7 +614,6 @@ body {
   transform: translateX(-50%) translateY(0);
 }
 </style>
-
 </head>
 <body>
 
@@ -512,15 +621,12 @@ body {
 
   <!-- HEADER -->
   <div class="header">
-    <div class="logo">voice<em>diary</em></div>
+    <div class="logo">
+      <div class="logo-mark"></div>
+      <span class="logo-text">Voice</span>
+      <span class="logo-sub">diary</span>
+    </div>
     <div class="today-label" id="todayLabel"></div>
-  </div>
-
-  <!-- TABS -->
-  <div class="tabs">
-    <button class="tab active" data-tab="record">🎙 녹음</button>
-    <button class="tab" data-tab="calendar">📅 캘린더</button>
-    <button class="tab" data-tab="list">📋 목록</button>
   </div>
 
   <!-- ── TAB: RECORD ── -->
@@ -529,7 +635,19 @@ body {
       <div class="rec-date" id="recDate"></div>
 
       <div class="mic-wrap">
-        <button class="mic-btn" id="micBtn" title="마이크">🎤</button>
+        <button class="mic-btn" id="micBtn" title="마이크">
+          <!-- mic icon -->
+          <svg id="micIcon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="2" width="6" height="12" rx="3"/>
+            <path d="M5 10a7 7 0 0014 0"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="8" y1="22" x2="16" y2="22"/>
+          </svg>
+          <!-- stop icon (hidden) -->
+          <svg id="stopIcon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+            <rect x="5" y="5" width="14" height="14" rx="3"/>
+          </svg>
+        </button>
       </div>
 
       <div class="rec-status" id="recStatus">탭하여 녹음 시작</div>
@@ -538,7 +656,7 @@ body {
         class="transcript-box empty"
         id="transcriptBox"
         contenteditable="true"
-        data-placeholder="음성을 인식하면 여기에 표시됩니다... (직접 수정 가능)"
+        data-placeholder="음성을 인식하면 여기에 표시됩니다 — 직접 수정 가능"
       ></div>
 
       <div class="action-row">
@@ -571,11 +689,50 @@ body {
 
 </div>
 
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-tab="record">
+    <span class="nav-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="2" width="6" height="12" rx="3"/>
+        <path d="M5 10a7 7 0 0014 0"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+        <line x1="8" y1="22" x2="16" y2="22"/>
+      </svg>
+    </span>
+    <span class="nav-label">녹음</span>
+  </button>
+  <button class="nav-btn" data-tab="calendar">
+    <span class="nav-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="3"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+    </span>
+    <span class="nav-label">캘린더</span>
+  </button>
+  <button class="nav-btn" data-tab="list">
+    <span class="nav-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"/>
+        <line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <circle cx="3" cy="6" r=".8" fill="currentColor" stroke="none"/>
+        <circle cx="3" cy="12" r=".8" fill="currentColor" stroke="none"/>
+        <circle cx="3" cy="18" r=".8" fill="currentColor" stroke="none"/>
+      </svg>
+    </span>
+    <span class="nav-label">목록</span>
+  </button>
+</nav>
+
 <div class="toast" id="toast"></div>
 
 <script>
 /* ═══════════════════════════════════════════
-   STORAGE HELPERS
+   STORAGE
 ═══════════════════════════════════════════ */
 const STORAGE_KEY = 'voiceDiary_entries';
 
@@ -596,12 +753,7 @@ function addEntry(text) {
   if (existing) {
     existing.text = existing.text + ' ' + text.trim();
   } else {
-    entries.unshift({
-      id: Date.now(),
-      text: text.trim(),
-      date: dateStr,
-      ts: now.toISOString()
-    });
+    entries.unshift({ id: Date.now(), text: text.trim(), date: dateStr, ts: now.toISOString() });
   }
   saveEntries(entries);
 }
@@ -623,15 +775,7 @@ function toDateStr(d) {
 
 function formatDateTime(isoStr) {
   const d = new Date(isoStr);
-  const hh = String(d.getHours()).padStart(2,'0');
-  const mm = String(d.getMinutes()).padStart(2,'0');
-  return `${hh}:${mm}`;
-}
-
-function formatDateFull(isoStr) {
-  const d = new Date(isoStr);
-  const days = ['일','월','화','수','목','금','토'];
-  return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
 /* ═══════════════════════════════════════════
@@ -647,23 +791,26 @@ function showToast(msg) {
 }
 
 /* ═══════════════════════════════════════════
-   TABS
+   NAV / TAB SWITCHING
 ═══════════════════════════════════════════ */
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-    if (tab.dataset.tab === 'calendar') renderCalendar();
-    if (tab.dataset.tab === 'list') renderList();
-  });
+function switchTab(name) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'calendar') renderCalendar();
+  if (name === 'list') renderList();
+}
+
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 
 /* ═══════════════════════════════════════════
    RECORDER
 ═══════════════════════════════════════════ */
 const micBtn        = document.getElementById('micBtn');
+const micIcon       = document.getElementById('micIcon');
+const stopIcon      = document.getElementById('stopIcon');
 const transcriptBox = document.getElementById('transcriptBox');
 const recStatus     = document.getElementById('recStatus');
 const clearBtn      = document.getElementById('clearBtn');
@@ -671,34 +818,31 @@ const saveBtn       = document.getElementById('saveBtn');
 
 let recognition, isRecording = false, finalText = '';
 
-// Header date
-const now0 = new Date();
+const now0    = new Date();
 const DAYS_KO = ['일','월','화','수','목','금','토'];
+const MONTHS  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
 document.getElementById('todayLabel').textContent =
-  `${now0.getFullYear()}.${String(now0.getMonth()+1).padStart(2,'0')}.${String(now0.getDate()).padStart(2,'0')} ${DAYS_KO[now0.getDay()]}`;
+  `${MONTHS[now0.getMonth()]} ${now0.getDate()}, ${now0.getFullYear()}`;
 document.getElementById('recDate').textContent =
-  `${now0.getMonth()+1}월 ${now0.getDate()}일 ${DAYS_KO[now0.getDay()]}요일`;
+  `${now0.getFullYear()}년 ${now0.getMonth()+1}월 ${now0.getDate()}일 ${DAYS_KO[now0.getDay()]}요일`;
 
 function setTranscript(text) {
   transcriptBox.textContent = text;
-  if (text) transcriptBox.classList.remove('empty');
-  else transcriptBox.classList.add('empty');
+  transcriptBox.classList.toggle('empty', !text);
 }
 
 transcriptBox.addEventListener('input', () => {
-  if (transcriptBox.textContent.trim()) transcriptBox.classList.remove('empty');
-  else transcriptBox.classList.add('empty');
+  transcriptBox.classList.toggle('empty', !transcriptBox.textContent.trim());
 });
 
 function initRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { showToast('이 브라우저는 음성인식을 지원하지 않습니다'); return null; }
-
   const r = new SR();
   r.lang = 'ko-KR';
   r.continuous = true;
   r.interimResults = true;
-
   r.onresult = e => {
     let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -708,15 +852,8 @@ function initRecognition() {
     }
     setTranscript(finalText + interim);
   };
-
-  r.onend = () => {
-    if (isRecording) { try { r.start(); } catch(e){} }
-  };
-
-  r.onerror = e => {
-    if (e.error === 'not-allowed') showToast('마이크 권한을 허용해 주세요');
-  };
-
+  r.onend = () => { if (isRecording) { try { r.start(); } catch(e){} } };
+  r.onerror = e => { if (e.error === 'not-allowed') showToast('마이크 권한을 허용해 주세요'); };
   return r;
 }
 
@@ -727,14 +864,16 @@ micBtn.addEventListener('click', () => {
     recognition.start();
     isRecording = true;
     micBtn.classList.add('recording');
-    micBtn.textContent = '⏹';
-    recStatus.textContent = '녹음 중... (탭하여 중지)';
+    micIcon.style.display = 'none';
+    stopIcon.style.display = '';
+    recStatus.textContent = '녹음 중 — 탭하여 중지';
     recStatus.classList.add('on');
   } else {
     isRecording = false;
     recognition.stop();
     micBtn.classList.remove('recording');
-    micBtn.textContent = '🎤';
+    micIcon.style.display = '';
+    stopIcon.style.display = 'none';
     recStatus.textContent = '탭하여 녹음 시작';
     recStatus.classList.remove('on');
   }
@@ -745,7 +884,8 @@ clearBtn.addEventListener('click', () => {
     isRecording = false;
     recognition && recognition.stop();
     micBtn.classList.remove('recording');
-    micBtn.textContent = '🎤';
+    micIcon.style.display = '';
+    stopIcon.style.display = 'none';
     recStatus.textContent = '탭하여 녹음 시작';
     recStatus.classList.remove('on');
   }
@@ -759,96 +899,71 @@ saveBtn.addEventListener('click', () => {
   addEntry(text);
   finalText = '';
   setTranscript('');
-  showToast('✓ 저장되었습니다');
-  // 목록 탭으로 이동
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelector('.tab[data-tab="list"]').classList.add('active');
-  document.getElementById('tab-list').classList.add('active');
-  renderList();
+  showToast('저장되었습니다');
+  switchTab('list');
 });
 
 /* ═══════════════════════════════════════════
    CALENDAR
 ═══════════════════════════════════════════ */
-let calYear  = now0.getFullYear();
-let calMonth = now0.getMonth();  // 0-based
-let selectedDateStr = null;
+let calYear = now0.getFullYear(), calMonth = now0.getMonth(), selectedDateStr = null;
 
 document.getElementById('prevMonth').addEventListener('click', () => {
-  calMonth--;
-  if (calMonth < 0) { calMonth = 11; calYear--; }
-  selectedDateStr = null;
-  renderCalendar();
+  if (--calMonth < 0) { calMonth = 11; calYear--; }
+  selectedDateStr = null; renderCalendar();
 });
 
 document.getElementById('nextMonth').addEventListener('click', () => {
-  calMonth++;
-  if (calMonth > 11) { calMonth = 0; calYear++; }
-  selectedDateStr = null;
-  renderCalendar();
+  if (++calMonth > 11) { calMonth = 0; calYear++; }
+  selectedDateStr = null; renderCalendar();
 });
 
 function renderCalendar() {
   const MONTHS_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   document.getElementById('calTitle').textContent = `${calYear}년 ${MONTHS_KO[calMonth]}`;
 
-  const entries = loadEntries();
+  const entries    = loadEntries();
   const entryDates = new Set(entries.map(e => e.date));
-
-  const todayStr = toDateStr(now0);
-  const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
-  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-  const daysInPrev  = new Date(calYear, calMonth, 0).getDate();
+  const todayStr   = toDateStr(now0);
+  const firstDay   = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth= new Date(calYear, calMonth+1, 0).getDate();
+  const daysInPrev = new Date(calYear, calMonth, 0).getDate();
 
   const grid = document.getElementById('calGrid');
   grid.innerHTML = '';
 
-  // Day-of-week headers
-  ['일','월','화','수','목','금','토'].forEach((d, i) => {
+  ['일','월','화','수','목','금','토'].forEach(d => {
     const el = document.createElement('div');
     el.className = 'cal-dow';
     el.textContent = d;
     grid.appendChild(el);
   });
 
-  // Prev month trailing days
-  for (let i = firstDay - 1; i >= 0; i--) {
+  for (let i = firstDay-1; i >= 0; i--) {
     const el = document.createElement('div');
     el.className = 'cal-cell empty other-month';
     el.innerHTML = `<span>${daysInPrev - i}</span>`;
     grid.appendChild(el);
   }
 
-  // Current month days
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dow = new Date(calYear, calMonth, d).getDay();
-    const el = document.createElement('div');
-
-    let cls = 'cal-cell';
+    const el  = document.createElement('div');
+    let cls   = 'cal-cell';
     if (dow === 0) cls += ' sun';
     if (dow === 6) cls += ' sat';
     if (dateStr === todayStr) cls += ' today';
     if (dateStr === selectedDateStr) cls += ' selected';
     if (entryDates.has(dateStr)) cls += ' has-entry';
     el.className = cls;
-
     el.innerHTML = `<span>${d}</span>${entryDates.has(dateStr) ? '<div class="dot"></div>' : ''}`;
-
-    el.addEventListener('click', () => {
-      selectedDateStr = dateStr;
-      renderCalendar();
-      renderDayEntries(dateStr);
-    });
-
+    el.addEventListener('click', () => { selectedDateStr = dateStr; renderCalendar(); renderDayEntries(dateStr); });
     grid.appendChild(el);
   }
 
-  // Next month leading days
-  const totalCells = firstDay + daysInMonth;
-  const remaining  = (7 - (totalCells % 7)) % 7;
-  for (let d = 1; d <= remaining; d++) {
+  const rem = (7 - ((firstDay + daysInMonth) % 7)) % 7;
+  for (let d = 1; d <= rem; d++) {
     const el = document.createElement('div');
     el.className = 'cal-cell empty other-month';
     el.innerHTML = `<span>${d}</span>`;
@@ -862,16 +977,13 @@ function renderDayEntries(dateStr) {
   const dayEntriesEl = document.getElementById('dayEntries');
   const listEl       = document.getElementById('dayEntriesList');
   const titleEl      = document.getElementById('dayEntriesTitle');
-
-  const entries = loadEntries().filter(e => e.date === dateStr);
-
-  const [y, m, d] = dateStr.split('-');
+  const entries      = loadEntries().filter(e => e.date === dateStr);
+  const [y, m, d]    = dateStr.split('-');
   const dow = new Date(+y, +m-1, +d).getDay();
   titleEl.textContent = `${+m}월 ${+d}일 ${DAYS_KO[dow]}요일 · ${entries.length}개`;
-
   listEl.innerHTML = '';
 
-  if (entries.length === 0) {
+  if (!entries.length) {
     listEl.innerHTML = '<div class="no-entry-msg">이 날의 기록이 없습니다</div>';
   } else {
     entries.forEach(entry => {
@@ -883,16 +995,11 @@ function renderDayEntries(dateStr) {
         <button class="day-entry-del" data-id="${entry.id}">✕</button>
       `;
       card.querySelector('.day-entry-del').addEventListener('click', () => {
-        if (confirm('이 항목을 삭제할까요?')) {
-          deleteEntry(entry.id);
-          renderDayEntries(dateStr);
-          renderCalendar();
-        }
+        if (confirm('이 항목을 삭제할까요?')) { deleteEntry(entry.id); renderDayEntries(dateStr); renderCalendar(); }
       });
       listEl.appendChild(card);
     });
   }
-
   dayEntriesEl.style.display = 'block';
 }
 
@@ -903,49 +1010,41 @@ function renderList() {
   const listContent = document.getElementById('listContent');
   const entries = loadEntries();
 
-  if (entries.length === 0) {
+  if (!entries.length) {
     listContent.innerHTML = `
       <div class="empty-list">
-        <div class="icon">📖</div>
+        <div class="icon">◎</div>
         <p>아직 저장된 기록이 없습니다</p>
-      </div>
-    `;
+      </div>`;
     return;
   }
 
-  // Group by date
   const groups = {};
-  entries.forEach(e => {
-    if (!groups[e.date]) groups[e.date] = [];
-    groups[e.date].push(e);
-  });
-
+  entries.forEach(e => { (groups[e.date] = groups[e.date] || []).push(e); });
   listContent.innerHTML = '';
 
   Object.keys(groups).sort((a,b) => b.localeCompare(a)).forEach(dateStr => {
     const [y, m, d] = dateStr.split('-');
     const dow = new Date(+y, +m-1, +d).getDay();
-    const label = `${+y}년 ${+m}월 ${+d}일 ${DAYS_KO[dow]}요일`;
 
-    const dateHeader = document.createElement('div');
-    dateHeader.style.cssText = 'font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;margin:16px 0 8px';
-    dateHeader.textContent = label;
-    listContent.appendChild(dateHeader);
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin:18px 0 10px';
+    hdr.textContent = `${+y}년 ${+m}월 ${+d}일 ${DAYS_KO[dow]}요일`;
+    listContent.appendChild(hdr);
 
     groups[dateStr].forEach(entry => {
       const card = document.createElement('div');
       card.className = 'entry-card';
-      card.dataset.id = entry.id;
 
-      const dateEl = document.createElement('div');
+      const dateEl    = document.createElement('div');
       dateEl.className = 'entry-card-date';
       dateEl.textContent = formatDateTime(entry.ts);
 
-      const textEl = document.createElement('div');
+      const textEl    = document.createElement('div');
       textEl.className = 'entry-card-text';
       textEl.textContent = entry.text;
 
-      const moreEl = document.createElement('div');
+      const moreEl    = document.createElement('div');
       moreEl.className = 'entry-card-more';
 
       const actionsEl = document.createElement('div');
@@ -955,20 +1054,14 @@ function renderList() {
       editBtn.className = 'btn-edit';
       editBtn.textContent = '수정';
 
-      const delBtn = document.createElement('button');
+      const delBtn  = document.createElement('button');
       delBtn.className = 'btn-del';
       delBtn.textContent = '삭제';
 
-      actionsEl.appendChild(editBtn);
-      actionsEl.appendChild(delBtn);
-
-      card.appendChild(dateEl);
-      card.appendChild(textEl);
-      card.appendChild(moreEl);
-      card.appendChild(actionsEl);
+      actionsEl.append(editBtn, delBtn);
+      card.append(dateEl, textEl, moreEl, actionsEl);
       listContent.appendChild(card);
 
-      // Expand long entries
       requestAnimationFrame(() => {
         if (textEl.scrollHeight > textEl.clientHeight + 4) {
           moreEl.textContent = '더 보기';
@@ -980,44 +1073,36 @@ function renderList() {
         }
       });
 
-      // Delete
       delBtn.addEventListener('click', () => {
-        if (confirm('이 항목을 삭제할까요?')) {
-          deleteEntry(entry.id);
-          renderList();
-        }
+        if (confirm('이 항목을 삭제할까요?')) { deleteEntry(entry.id); renderList(); }
       });
 
-      // Edit — inline mode
       editBtn.addEventListener('click', () => {
-        // Replace text display with textarea
         const textarea = document.createElement('textarea');
         textarea.className = 'entry-edit-area';
         textarea.value = entry.text;
 
-        const saveEditBtn = document.createElement('button');
-        saveEditBtn.className = 'btn-edit-save';
-        saveEditBtn.textContent = '저장';
+        const saveEl   = document.createElement('button');
+        saveEl.className = 'btn-edit-save';
+        saveEl.textContent = '저장';
 
-        const cancelBtn = document.createElement('button');
-        cancelBtn.className = 'btn-edit-cancel';
-        cancelBtn.textContent = '취소';
+        const cancelEl = document.createElement('button');
+        cancelEl.className = 'btn-edit-cancel';
+        cancelEl.textContent = '취소';
+
+        const editActionsEl = document.createElement('div');
+        editActionsEl.className = 'entry-card-actions';
+        editActionsEl.append(cancelEl, saveEl);
 
         textEl.style.display = 'none';
         moreEl.style.display = 'none';
         actionsEl.style.display = 'none';
         card.insertBefore(textarea, actionsEl);
-
-        const editActionsEl = document.createElement('div');
-        editActionsEl.className = 'entry-card-actions';
-        editActionsEl.appendChild(cancelBtn);
-        editActionsEl.appendChild(saveEditBtn);
         card.appendChild(editActionsEl);
-
         textarea.focus();
         textarea.setSelectionRange(textarea.value.length, textarea.value.length);
 
-        saveEditBtn.addEventListener('click', () => {
+        saveEl.addEventListener('click', () => {
           const newText = textarea.value.trim();
           if (!newText) { showToast('내용을 입력해 주세요'); return; }
           updateEntry(entry.id, newText);
@@ -1029,10 +1114,10 @@ function renderList() {
           actionsEl.style.display = '';
           textarea.remove();
           editActionsEl.remove();
-          showToast('✓ 수정되었습니다');
+          showToast('수정되었습니다');
         });
 
-        cancelBtn.addEventListener('click', () => {
+        cancelEl.addEventListener('click', () => {
           textEl.style.display = '';
           moreEl.style.display = '';
           actionsEl.style.display = '';
@@ -1045,16 +1130,10 @@ function renderList() {
 }
 
 function escHtml(str) {
-  return str
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* ═══════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════ */
+/* ── INIT ── */
 renderCalendar();
 </script>
 
