@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Voice Diary</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #1a1a1a;
+  --paper: #f5f0e8;
+  --cream: #ede8dc;
+  --accent: #c0392b;
+  --gold: #b8860b;
+  --muted: #8a8070;
+  --line: #d4cfc4;
+  --white: #fff;
+  --green: #2ecc71;
+}
+
+body {
+  font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 80px;
+}
+
+/* ── HEADER ── */
+.header {
+  padding: 22px 20px 14px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  z-index: 100;
+}
+
+.logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+.logo em { color: var(--accent); font-style: italic; font-weight: 400; }
+.today-label { font-size: 11px; color: var(--muted); letter-spacing: 0.05em; }
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+}
+
+.tab {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  transition: all .2s;
+  letter-spacing: 0.02em;
+}
+
+.tab.active {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+
+/* ── PANELS ── */
+.panel { display: none; padding: 20px; }
+.panel.active { display: block; }
+
+/* ── RECORDER ── */
+.recorder-panel { text-align: center; }
+
+.rec-date {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+}
+
+.mic-wrap {
+  margin: 24px auto;
+  width: 90px;
+  height: 90px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mic-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  background: var(--ink);
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+  transition: background .2s, transform .1s;
+  position: relative;
+  z-index: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mic-btn:active { transform: scale(.95); }
+
+.mic-btn.recording {
+  background: var(--accent);
+}
+
+.mic-btn.recording::before,
+.mic-btn.recording::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: ripple 1.4s ease-out infinite;
+}
+
+.mic-btn.recording::after {
+  animation-delay: .7s;
+}
+
+@keyframes ripple {
+  0%  { transform: scale(1); opacity: .6; }
+  100%{ transform: scale(1.6); opacity: 0; }
+}
+
+.rec-status {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 16px;
+  min-height: 16px;
+  letter-spacing: 0.03em;
+}
+
+.rec-status.on { color: var(--accent); }
+
+.transcript-box {
+  background: var(--cream);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 100px;
+  max-height: 180px;
+  overflow-y: auto;
+  text-align: left;
+  font-size: 15px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--ink);
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+}
+
+.transcript-box.empty::after {
+  content: attr(data-placeholder);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.action-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn {
+  padding: 11px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .2s, transform .1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .4; pointer-events: none; }
+
+.btn-save { background: var(--ink); color: #fff; }
+.btn-clear { background: var(--cream); color: var(--muted); border: 1px solid var(--line); }
+
+/* ── CALENDAR ── */
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.cal-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.cal-nav {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-dow {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 4px 0 8px;
+  letter-spacing: 0.06em;
+}
+
+.cal-dow:first-child { color: #e74c3c; }
+.cal-dow:last-child  { color: #3498db; }
+
+.cal-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  position: relative;
+  transition: background .15s;
+  -webkit-tap-highlight-color: transparent;
+  gap: 2px;
+}
+
+.cal-cell:hover { background: var(--cream); }
+
+.cal-cell.empty { pointer-events: none; }
+
+.cal-cell.today {
+  font-weight: 700;
+  background: var(--cream);
+  border: 1.5px solid var(--line);
+}
+
+.cal-cell.selected {
+  background: var(--ink) !important;
+  color: #fff;
+}
+
+.cal-cell.has-entry .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.cal-cell.selected .dot {
+  background: rgba(255,255,255,.7);
+}
+
+.cal-cell.sun { color: #e74c3c; }
+.cal-cell.sat { color: #3498db; }
+.cal-cell.selected.sun,
+.cal-cell.selected.sat { color: #fff; }
+
+.cal-cell.other-month { opacity: .35; }
+
+/* ── SELECTED DAY ENTRIES ── */
+.day-entries {
+  margin-top: 20px;
+}
+
+.day-entries-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.day-entry-card {
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+  position: relative;
+}
+
+.day-entry-time {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+}
+
+.day-entry-text {
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.day-entry-del {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.day-entry-del:hover { color: var(--accent); }
+
+.no-entry-msg {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 20px 0;
+}
+
+/* ── LIST VIEW ── */
+.list-panel .entry-card {
+  background: var(--cream);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  position: relative;
+}
+
+.entry-card-date {
+  font-size: 11px;
+  color: var(--gold);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.entry-card-text {
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-all;
+  white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.entry-card-text.expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+}
+
+.entry-card-more {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 4px;
+  display: none;
+}
+
+.entry-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  gap: 8px;
+}
+
+.btn-del {
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.btn-del:hover { color: var(--accent); border-color: var(--accent); }
+
+.empty-list {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+}
+
+.empty-list .icon { font-size: 40px; margin-bottom: 12px; }
+.empty-list p { font-size: 14px; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transition: all .3s;
+  pointer-events: none;
+  z-index: 999;
+  white-space: nowrap;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">voice<em>diary</em></div>
+    <div class="today-label" id="todayLabel"></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" data-tab="record">🎙 녹음</button>
+    <button class="tab" data-tab="calendar">📅 캘린더</button>
+    <button class="tab" data-tab="list">📋 목록</button>
+  </div>
+
+  <!-- ── TAB: RECORD ── -->
+  <div class="panel active" id="tab-record">
+    <div class="recorder-panel">
+      <div class="rec-date" id="recDate"></div>
+
+      <div class="mic-wrap">
+        <button class="mic-btn" id="micBtn" title="마이크">🎤</button>
+      </div>
+
+      <div class="rec-status" id="recStatus">탭하여 녹음 시작</div>
+
+      <div
+        class="transcript-box empty"
+        id="transcriptBox"
+        data-placeholder="음성을 인식하면 여기에 표시됩니다..."
+      ></div>
+
+      <div class="action-row">
+        <button class="btn btn-clear" id="clearBtn">지우기</button>
+        <button class="btn btn-save" id="saveBtn">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: CALENDAR ── -->
+  <div class="panel" id="tab-calendar">
+    <div class="cal-header">
+      <button class="cal-nav" id="prevMonth">‹</button>
+      <div class="cal-title" id="calTitle"></div>
+      <button class="cal-nav" id="nextMonth">›</button>
+    </div>
+
+    <div class="cal-grid" id="calGrid"></div>
+
+    <div class="day-entries" id="dayEntries" style="display:none">
+      <div class="day-entries-title" id="dayEntriesTitle"></div>
+      <div id="dayEntriesList"></div>
+    </div>
+  </div>
+
+  <!-- ── TAB: LIST ── -->
+  <div class="panel list-panel" id="tab-list">
+    <div id="listContent"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   STORAGE HELPERS
+═══════════════════════════════════════════ */
+const STORAGE_KEY = 'voiceDiary_entries';
+
+function loadEntries() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
+}
+
+function saveEntries(entries) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+
+function addEntry(text) {
+  const entries = loadEntries();
+  const now = new Date();
+  entries.unshift({
+    id: Date.now(),
+    text: text.trim(),
+    date: toDateStr(now),   // "YYYY-MM-DD"
+    ts: now.toISOString()
+  });
+  saveEntries(entries);
+}
+
+function deleteEntry(id) {
+  saveEntries(loadEntries().filter(e => e.id !== id));
+}
+
+function toDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function formatDateTime(isoStr) {
+  const d = new Date(isoStr);
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  return `${hh}:${mm}`;
+}
+
+function formatDateFull(isoStr) {
+  const d = new Date(isoStr);
+  const days = ['일','월','화','수','목','금','토'];
+  return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+/* ═══════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════ */
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'calendar') renderCalendar();
+    if (tab.dataset.tab === 'list') renderList();
+  });
+});
+
+/* ═══════════════════════════════════════════
+   RECORDER
+═══════════════════════════════════════════ */
+const micBtn        = document.getElementById('micBtn');
+const transcriptBox = document.getElementById('transcriptBox');
+const recStatus     = document.getElementById('recStatus');
+const clearBtn      = document.getElementById('clearBtn');
+const saveBtn       = document.getElementById('saveBtn');
+
+let recognition, isRecording = false, finalText = '';
+
+// Header date
+const now0 = new Date();
+const DAYS_KO = ['일','월','화','수','목','금','토'];
+document.getElementById('todayLabel').textContent =
+  `${now0.getFullYear()}.${String(now0.getMonth()+1).padStart(2,'0')}.${String(now0.getDate()).padStart(2,'0')} ${DAYS_KO[now0.getDay()]}`;
+document.getElementById('recDate').textContent =
+  `${now0.getMonth()+1}월 ${now0.getDate()}일 ${DAYS_KO[now0.getDay()]}요일`;
+
+function setTranscript(text) {
+  transcriptBox.textContent = text;
+  if (text) transcriptBox.classList.remove('empty');
+  else transcriptBox.classList.add('empty');
+}
+
+function initRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showToast('이 브라우저는 음성인식을 지원하지 않습니다'); return null; }
+
+  const r = new SR();
+  r.lang = 'ko-KR';
+  r.continuous = true;
+  r.interimResults = true;
+
+  r.onresult = e => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) finalText += t + ' ';
+      else interim = t;
+    }
+    setTranscript(finalText + interim);
+  };
+
+  r.onend = () => {
+    if (isRecording) { try { r.start(); } catch(e){} }
+  };
+
+  r.onerror = e => {
+    if (e.error === 'not-allowed') showToast('마이크 권한을 허용해 주세요');
+  };
+
+  return r;
+}
+
+micBtn.addEventListener('click', () => {
+  if (!isRecording) {
+    recognition = initRecognition();
+    if (!recognition) return;
+    recognition.start();
+    isRecording = true;
+    micBtn.classList.add('recording');
+    micBtn.textContent = '⏹';
+    recStatus.textContent = '녹음 중... (탭하여 중지)';
+    recStatus.classList.add('on');
+  } else {
+    isRecording = false;
+    recognition.stop();
+    micBtn.classList.remove('recording');
+    micBtn.textContent = '🎤';
+    recStatus.textContent = '탭하여 녹음 시작';
+    recStatus.classList.remove('on');
+  }
+});
+
+clearBtn.addEventListener('click', () => {
+  if (isRecording) {
+    isRecording = false;
+    recognition && recognition.stop();
+    micBtn.classList.remove('recording');
+    micBtn.textContent = '🎤';
+    recStatus.textContent = '탭하여 녹음 시작';
+    recStatus.classList.remove('on');
+  }
+  finalText = '';
+  setTranscript('');
+});
+
+saveBtn.addEventListener('click', () => {
+  const text = transcriptBox.textContent.trim();
+  if (!text) { showToast('저장할 내용이 없습니다'); return; }
+  addEntry(text);
+  finalText = '';
+  setTranscript('');
+  showToast('✓ 저장되었습니다');
+});
+
+/* ═══════════════════════════════════════════
+   CALENDAR
+═══════════════════════════════════════════ */
+let calYear  = now0.getFullYear();
+let calMonth = now0.getMonth();  // 0-based
+let selectedDateStr = null;
+
+document.getElementById('prevMonth').addEventListener('click', () => {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  selectedDateStr = null;
+  renderCalendar();
+});
+
+document.getElementById('nextMonth').addEventListener('click', () => {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  selectedDateStr = null;
+  renderCalendar();
+});
+
+function renderCalendar() {
+  const MONTHS_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('calTitle').textContent = `${calYear}년 ${MONTHS_KO[calMonth]}`;
+
+  const entries = loadEntries();
+  const entryDates = new Set(entries.map(e => e.date));
+
+  const todayStr = toDateStr(now0);
+  const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const daysInPrev  = new Date(calYear, calMonth, 0).getDate();
+
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+
+  // Day-of-week headers
+  ['일','월','화','수','목','금','토'].forEach((d, i) => {
+    const el = document.createElement('div');
+    el.className = 'cal-dow';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  // Prev month trailing days
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const el = document.createElement('div');
+    el.className = 'cal-cell empty other-month';
+    el.innerHTML = `<span>${daysInPrev - i}</span>`;
+    grid.appendChild(el);
+  }
+
+  // Current month days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(calYear, calMonth, d).getDay();
+    const el = document.createElement('div');
+
+    let cls = 'cal-cell';
+    if (dow === 0) cls += ' sun';
+    if (dow === 6) cls += ' sat';
+    if (dateStr === todayStr) cls += ' today';
+    if (dateStr === selectedDateStr) cls += ' selected';
+    if (entryDates.has(dateStr)) cls += ' has-entry';
+    el.className = cls;
+
+    el.innerHTML = `<span>${d}</span>${entryDates.has(dateStr) ? '<div class="dot"></div>' : ''}`;
+
+    el.addEventListener('click', () => {
+      selectedDateStr = dateStr;
+      renderCalendar();
+      renderDayEntries(dateStr);
+    });
+
+    grid.appendChild(el);
+  }
+
+  // Next month leading days
+  const totalCells = firstDay + daysInMonth;
+  const remaining  = (7 - (totalCells % 7)) % 7;
+  for (let d = 1; d <= remaining; d++) {
+    const el = document.createElement('div');
+    el.className = 'cal-cell empty other-month';
+    el.innerHTML = `<span>${d}</span>`;
+    grid.appendChild(el);
+  }
+
+  if (selectedDateStr) renderDayEntries(selectedDateStr);
+}
+
+function renderDayEntries(dateStr) {
+  const dayEntriesEl = document.getElementById('dayEntries');
+  const listEl       = document.getElementById('dayEntriesList');
+  const titleEl      = document.getElementById('dayEntriesTitle');
+
+  const entries = loadEntries().filter(e => e.date === dateStr);
+
+  const [y, m, d] = dateStr.split('-');
+  const dow = new Date(+y, +m-1, +d).getDay();
+  titleEl.textContent = `${+m}월 ${+d}일 ${DAYS_KO[dow]}요일 · ${entries.length}개`;
+
+  listEl.innerHTML = '';
+
+  if (entries.length === 0) {
+    listEl.innerHTML = '<div class="no-entry-msg">이 날의 기록이 없습니다</div>';
+  } else {
+    entries.forEach(entry => {
+      const card = document.createElement('div');
+      card.className = 'day-entry-card';
+      card.innerHTML = `
+        <div class="day-entry-time">${formatDateTime(entry.ts)}</div>
+        <div class="day-entry-text">${escHtml(entry.text)}</div>
+        <button class="day-entry-del" data-id="${entry.id}">✕</button>
+      `;
+      card.querySelector('.day-entry-del').addEventListener('click', () => {
+        if (confirm('이 항목을 삭제할까요?')) {
+          deleteEntry(entry.id);
+          renderDayEntries(dateStr);
+          renderCalendar();
+        }
+      });
+      listEl.appendChild(card);
+    });
+  }
+
+  dayEntriesEl.style.display = 'block';
+}
+
+/* ═══════════════════════════════════════════
+   LIST
+═══════════════════════════════════════════ */
+function renderList() {
+  const listContent = document.getElementById('listContent');
+  const entries = loadEntries();
+
+  if (entries.length === 0) {
+    listContent.innerHTML = `
+      <div class="empty-list">
+        <div class="icon">📖</div>
+        <p>아직 저장된 기록이 없습니다</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Group by date
+  const groups = {};
+  entries.forEach(e => {
+    if (!groups[e.date]) groups[e.date] = [];
+    groups[e.date].push(e);
+  });
+
+  let html = '';
+  Object.keys(groups).sort((a,b) => b.localeCompare(a)).forEach(dateStr => {
+    const [y, m, d] = dateStr.split('-');
+    const dow = new Date(+y, +m-1, +d).getDay();
+    const label = `${+y}년 ${+m}월 ${+d}일 ${DAYS_KO[dow]}요일`;
+
+    html += `<div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;margin:16px 0 8px">${label}</div>`;
+
+    groups[dateStr].forEach(entry => {
+      html += `
+        <div class="entry-card" data-id="${entry.id}">
+          <div class="entry-card-date">${formatDateTime(entry.ts)}</div>
+          <div class="entry-card-text">${escHtml(entry.text)}</div>
+          <div class="entry-card-actions">
+            <button class="btn-del" data-id="${entry.id}">삭제</button>
+          </div>
+        </div>
+      `;
+    });
+  });
+
+  listContent.innerHTML = html;
+
+  // Delete buttons
+  listContent.querySelectorAll('.btn-del').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (confirm('이 항목을 삭제할까요?')) {
+        deleteEntry(+btn.dataset.id);
+        renderList();
+      }
+    });
+  });
+
+  // Expand long entries
+  listContent.querySelectorAll('.entry-card-text').forEach(el => {
+    if (el.scrollHeight > el.clientHeight + 4) {
+      const more = document.createElement('div');
+      more.className = 'entry-card-more';
+      more.textContent = '더 보기';
+      more.style.display = 'block';
+      el.after(more);
+      more.addEventListener('click', () => {
+        el.classList.toggle('expanded');
+        more.textContent = el.classList.contains('expanded') ? '접기' : '더 보기';
+      });
+    }
+  });
+}
+
+function escHtml(str) {
+  return str
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+renderCalendar();
+</script>
+
+</body>
+</html>
