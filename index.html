@@ -168,12 +168,68 @@ body {
   color: var(--ink);
   margin-bottom: 14px;
   border: 1px solid var(--line);
+  cursor: text;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.transcript-box:focus {
+  border-color: var(--ink);
 }
 
 .transcript-box.empty::after {
   content: attr(data-placeholder);
   color: var(--muted);
   font-size: 14px;
+  pointer-events: none;
+}
+
+/* ── INLINE EDIT ── */
+.entry-edit-area {
+  width: 100%;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  font-family: inherit;
+  color: var(--ink);
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+}
+
+.btn-edit {
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.btn-edit:hover { color: var(--gold); border-color: var(--gold); }
+
+.btn-edit-save {
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  background: var(--ink);
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn-edit-cancel {
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
 }
 
 .action-row {
@@ -481,7 +537,8 @@ body {
       <div
         class="transcript-box empty"
         id="transcriptBox"
-        data-placeholder="음성을 인식하면 여기에 표시됩니다..."
+        contenteditable="true"
+        data-placeholder="음성을 인식하면 여기에 표시됩니다... (직접 수정 가능)"
       ></div>
 
       <div class="action-row">
@@ -534,17 +591,30 @@ function saveEntries(entries) {
 function addEntry(text) {
   const entries = loadEntries();
   const now = new Date();
-  entries.unshift({
-    id: Date.now(),
-    text: text.trim(),
-    date: toDateStr(now),   // "YYYY-MM-DD"
-    ts: now.toISOString()
-  });
+  const dateStr = toDateStr(now);
+  const existing = entries.find(e => e.date === dateStr);
+  if (existing) {
+    existing.text = existing.text + ' ' + text.trim();
+  } else {
+    entries.unshift({
+      id: Date.now(),
+      text: text.trim(),
+      date: dateStr,
+      ts: now.toISOString()
+    });
+  }
   saveEntries(entries);
 }
 
 function deleteEntry(id) {
   saveEntries(loadEntries().filter(e => e.id !== id));
+}
+
+function updateEntry(id, newText) {
+  const entries = loadEntries();
+  const entry = entries.find(e => e.id === id);
+  if (entry) entry.text = newText.trim();
+  saveEntries(entries);
 }
 
 function toDateStr(d) {
@@ -614,6 +684,11 @@ function setTranscript(text) {
   if (text) transcriptBox.classList.remove('empty');
   else transcriptBox.classList.add('empty');
 }
+
+transcriptBox.addEventListener('input', () => {
+  if (transcriptBox.textContent.trim()) transcriptBox.classList.remove('empty');
+  else transcriptBox.classList.add('empty');
+});
 
 function initRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -685,6 +760,12 @@ saveBtn.addEventListener('click', () => {
   finalText = '';
   setTranscript('');
   showToast('✓ 저장되었습니다');
+  // 목록 탭으로 이동
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.tab[data-tab="list"]').classList.add('active');
+  document.getElementById('tab-list').classList.add('active');
+  renderList();
 });
 
 /* ═══════════════════════════════════════════
@@ -839,52 +920,127 @@ function renderList() {
     groups[e.date].push(e);
   });
 
-  let html = '';
+  listContent.innerHTML = '';
+
   Object.keys(groups).sort((a,b) => b.localeCompare(a)).forEach(dateStr => {
     const [y, m, d] = dateStr.split('-');
     const dow = new Date(+y, +m-1, +d).getDay();
     const label = `${+y}년 ${+m}월 ${+d}일 ${DAYS_KO[dow]}요일`;
 
-    html += `<div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;margin:16px 0 8px">${label}</div>`;
+    const dateHeader = document.createElement('div');
+    dateHeader.style.cssText = 'font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;margin:16px 0 8px';
+    dateHeader.textContent = label;
+    listContent.appendChild(dateHeader);
 
     groups[dateStr].forEach(entry => {
-      html += `
-        <div class="entry-card" data-id="${entry.id}">
-          <div class="entry-card-date">${formatDateTime(entry.ts)}</div>
-          <div class="entry-card-text">${escHtml(entry.text)}</div>
-          <div class="entry-card-actions">
-            <button class="btn-del" data-id="${entry.id}">삭제</button>
-          </div>
-        </div>
-      `;
-    });
-  });
+      const card = document.createElement('div');
+      card.className = 'entry-card';
+      card.dataset.id = entry.id;
 
-  listContent.innerHTML = html;
+      const dateEl = document.createElement('div');
+      dateEl.className = 'entry-card-date';
+      dateEl.textContent = formatDateTime(entry.ts);
 
-  // Delete buttons
-  listContent.querySelectorAll('.btn-del').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (confirm('이 항목을 삭제할까요?')) {
-        deleteEntry(+btn.dataset.id);
-        renderList();
-      }
-    });
-  });
+      const textEl = document.createElement('div');
+      textEl.className = 'entry-card-text';
+      textEl.textContent = entry.text;
 
-  // Expand long entries
-  listContent.querySelectorAll('.entry-card-text').forEach(el => {
-    if (el.scrollHeight > el.clientHeight + 4) {
-      const more = document.createElement('div');
-      more.className = 'entry-card-more';
-      more.textContent = '더 보기';
-      more.style.display = 'block';
-      el.after(more);
-      more.addEventListener('click', () => {
-        el.classList.toggle('expanded');
-        more.textContent = el.classList.contains('expanded') ? '접기' : '더 보기';
+      const moreEl = document.createElement('div');
+      moreEl.className = 'entry-card-more';
+
+      const actionsEl = document.createElement('div');
+      actionsEl.className = 'entry-card-actions';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn-edit';
+      editBtn.textContent = '수정';
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn-del';
+      delBtn.textContent = '삭제';
+
+      actionsEl.appendChild(editBtn);
+      actionsEl.appendChild(delBtn);
+
+      card.appendChild(dateEl);
+      card.appendChild(textEl);
+      card.appendChild(moreEl);
+      card.appendChild(actionsEl);
+      listContent.appendChild(card);
+
+      // Expand long entries
+      requestAnimationFrame(() => {
+        if (textEl.scrollHeight > textEl.clientHeight + 4) {
+          moreEl.textContent = '더 보기';
+          moreEl.style.display = 'block';
+          moreEl.addEventListener('click', () => {
+            textEl.classList.toggle('expanded');
+            moreEl.textContent = textEl.classList.contains('expanded') ? '접기' : '더 보기';
+          });
+        }
       });
-    }
+
+      // Delete
+      delBtn.addEventListener('click', () => {
+        if (confirm('이 항목을 삭제할까요?')) {
+          deleteEntry(entry.id);
+          renderList();
+        }
+      });
+
+      // Edit — inline mode
+      editBtn.addEventListener('click', () => {
+        // Replace text display with textarea
+        const textarea = document.createElement('textarea');
+        textarea.className = 'entry-edit-area';
+        textarea.value = entry.text;
+
+        const saveEditBtn = document.createElement('button');
+        saveEditBtn.className = 'btn-edit-save';
+        saveEditBtn.textContent = '저장';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn-edit-cancel';
+        cancelBtn.textContent = '취소';
+
+        textEl.style.display = 'none';
+        moreEl.style.display = 'none';
+        actionsEl.style.display = 'none';
+        card.insertBefore(textarea, actionsEl);
+
+        const editActionsEl = document.createElement('div');
+        editActionsEl.className = 'entry-card-actions';
+        editActionsEl.appendChild(cancelBtn);
+        editActionsEl.appendChild(saveEditBtn);
+        card.appendChild(editActionsEl);
+
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+        saveEditBtn.addEventListener('click', () => {
+          const newText = textarea.value.trim();
+          if (!newText) { showToast('내용을 입력해 주세요'); return; }
+          updateEntry(entry.id, newText);
+          entry.text = newText;
+          textEl.textContent = newText;
+          textEl.classList.remove('expanded');
+          textEl.style.display = '';
+          moreEl.style.display = 'none';
+          actionsEl.style.display = '';
+          textarea.remove();
+          editActionsEl.remove();
+          showToast('✓ 수정되었습니다');
+        });
+
+        cancelBtn.addEventListener('click', () => {
+          textEl.style.display = '';
+          moreEl.style.display = '';
+          actionsEl.style.display = '';
+          textarea.remove();
+          editActionsEl.remove();
+        });
+      });
+    });
   });
 }
 
