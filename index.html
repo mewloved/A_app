@@ -536,6 +536,237 @@ body {
 .empty-list .icon { font-size: 36px; margin-bottom: 14px; opacity: .5; }
 .empty-list p { font-size: 14px; letter-spacing: 0.04em; }
 
+/* ── AI FEATURES ── */
+.ai-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.btn-ai {
+  flex: 1;
+  padding: 10px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  background: var(--surface);
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: background .15s, border-color .15s, transform .1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-ai:active { transform: scale(.96); }
+.btn-ai:disabled { opacity: .45; pointer-events: none; }
+
+.btn-ai.primary {
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+}
+
+.btn-ai svg { flex-shrink: 0; }
+
+.ai-spin {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* AI Result Sheet */
+.ai-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+}
+.ai-sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+
+.ai-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg);
+  border-radius: 22px 22px 0 0;
+  z-index: 601;
+  transition: transform .32s cubic-bezier(.4,0,.2,1);
+  padding-bottom: calc(var(--nav-h) + 10px);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+.ai-sheet.open { transform: translateX(-50%) translateY(0); }
+
+.ai-sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+
+.ai-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.ai-sheet-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 0.02em;
+}
+
+.ai-sheet-close {
+  background: var(--surface);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-sheet-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ai-result-text {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--navy);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ai-result-section {
+  margin-bottom: 18px;
+}
+
+.ai-result-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.ai-result-value {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--navy);
+}
+
+.ai-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.ai-tag {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.ai-sheet-actions {
+  padding: 12px 20px 0;
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+}
+
+.btn-ai-apply {
+  flex: 1;
+  padding: 12px;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+
+.btn-ai-discard {
+  padding: 12px 20px;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* AI Settings row */
+.ai-settings-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+}
+
+.ai-settings-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
+.ai-model-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: var(--navy);
+  font-weight: 600;
+  font-family: inherit;
+  outline: none;
+  min-width: 0;
+}
+
 /* ── BOTTOM NAV ── */
 .bottom-nav {
   position: fixed;
@@ -659,9 +890,28 @@ body {
         data-placeholder="음성을 인식하면 여기에 표시됩니다 — 직접 수정 가능"
       ></div>
 
+      <!-- AI 기능 버튼 (텍스트 있을 때 표시) -->
+      <div class="ai-bar" id="aiBar" style="display:none">
+        <button class="btn-ai" id="aiSpellBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          맞춤법 교정
+        </button>
+        <button class="btn-ai primary" id="aiPolishBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          텍스트 다듬기
+        </button>
+      </div>
+
       <div class="action-row">
         <button class="btn btn-clear" id="clearBtn">지우기</button>
         <button class="btn btn-save" id="saveBtn">저장</button>
+      </div>
+
+      <!-- AI 모델 설정 -->
+      <div class="ai-settings-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M2 12h2M20 12h2M12 2v2M12 20v2"/></svg>
+        <span class="ai-settings-label">Ollama 모델</span>
+        <input class="ai-model-input" id="aiModelInput" type="text" placeholder="gemma4" value="gemma4" spellcheck="false">
       </div>
     </div>
   </div>
@@ -727,6 +977,18 @@ body {
     <span class="nav-label">목록</span>
   </button>
 </nav>
+
+<!-- AI Result Sheet -->
+<div class="ai-sheet-backdrop" id="aiBackdrop"></div>
+<div class="ai-sheet" id="aiSheet">
+  <div class="ai-sheet-handle"></div>
+  <div class="ai-sheet-head">
+    <span class="ai-sheet-title" id="aiSheetTitle">AI 결과</span>
+    <button class="ai-sheet-close" id="aiSheetClose">✕</button>
+  </div>
+  <div class="ai-sheet-body" id="aiSheetBody"></div>
+  <div class="ai-sheet-actions" id="aiSheetActions"></div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -1058,7 +1320,13 @@ function renderList() {
       delBtn.className = 'btn-del';
       delBtn.textContent = '삭제';
 
-      actionsEl.append(editBtn, delBtn);
+      const aiBtn = document.createElement('button');
+      aiBtn.className = 'btn-ai';
+      aiBtn.style.cssText = 'font-size:11px;padding:5px 10px;flex:none;';
+      aiBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41"/></svg> AI 분석`;
+      aiBtn.addEventListener('click', () => runAiAnalysis(entry.text, aiBtn));
+
+      actionsEl.append(aiBtn, editBtn, delBtn);
       card.append(dateEl, textEl, moreEl, actionsEl);
       listContent.appendChild(card);
 
@@ -1132,6 +1400,269 @@ function renderList() {
 function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+/* ═══════════════════════════════════════════
+   AI — OLLAMA INTEGRATION
+═══════════════════════════════════════════ */
+
+// AI 버튼 표시/숨김: 텍스트 있을 때만
+const aiBar = document.getElementById('aiBar');
+const aiModelInput = document.getElementById('aiModelInput');
+
+// 저장된 모델명 복원
+const savedModel = localStorage.getItem('voiceDiary_aiModel');
+if (savedModel) aiModelInput.value = savedModel;
+aiModelInput.addEventListener('change', () => {
+  localStorage.setItem('voiceDiary_aiModel', aiModelInput.value.trim());
+});
+
+function updateAiBar() {
+  aiBar.style.display = transcriptBox.textContent.trim() ? 'flex' : 'none';
+}
+
+// transcript 변화 감지 (기존 input 이벤트에 추가)
+transcriptBox.addEventListener('input', updateAiBar);
+
+function getAiModel() {
+  return aiModelInput.value.trim() || 'gemma4';
+}
+
+// Ollama API 호출 (스트리밍 지원)
+async function callOllama(prompt, onChunk) {
+  const model = getAiModel();
+  const resp = await fetch('http://localhost:11434/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, prompt, stream: !!onChunk })
+  });
+  if (!resp.ok) throw new Error(`Ollama ${resp.status}: 모델 "${model}"을 확인하세요`);
+
+  if (!onChunk) {
+    const data = await resp.json();
+    return (data.response || '').trim();
+  }
+
+  // 스트리밍
+  const reader = resp.body.getReader();
+  const dec = new TextDecoder();
+  let full = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const lines = dec.decode(value).split('\n').filter(Boolean);
+    for (const line of lines) {
+      try {
+        const j = JSON.parse(line);
+        if (j.response) { full += j.response; onChunk(full); }
+        if (j.done) return full;
+      } catch {}
+    }
+  }
+  return full;
+}
+
+// AI 시트 열기/닫기
+function openAiSheet(title, bodyEl, actionsEl) {
+  document.getElementById('aiSheetTitle').textContent = title;
+  const body = document.getElementById('aiSheetBody');
+  const actions = document.getElementById('aiSheetActions');
+  body.innerHTML = '';
+  actions.innerHTML = '';
+  body.appendChild(bodyEl);
+  if (actionsEl) actions.appendChild(actionsEl);
+  document.getElementById('aiBackdrop').classList.add('open');
+  document.getElementById('aiSheet').classList.add('open');
+}
+
+function closeAiSheet() {
+  document.getElementById('aiBackdrop').classList.remove('open');
+  document.getElementById('aiSheet').classList.remove('open');
+}
+
+document.getElementById('aiSheetClose').addEventListener('click', closeAiSheet);
+document.getElementById('aiBackdrop').addEventListener('click', closeAiSheet);
+
+// ── 1. 텍스트 다듬기 ──────────────────────────
+document.getElementById('aiPolishBtn').addEventListener('click', async () => {
+  const text = transcriptBox.textContent.trim();
+  if (!text) return;
+
+  const btn = document.getElementById('aiPolishBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="ai-spin"></span> 처리 중`;
+
+  const resultEl = document.createElement('div');
+  resultEl.className = 'ai-result-text';
+  resultEl.textContent = '';
+
+  const actWrap = document.createElement('div');
+  actWrap.style.cssText = 'display:flex;gap:10px;width:100%';
+  const applyBtn = document.createElement('button');
+  applyBtn.className = 'btn-ai-apply';
+  applyBtn.textContent = '적용하기';
+  const discardBtn = document.createElement('button');
+  discardBtn.className = 'btn-ai-discard';
+  discardBtn.textContent = '취소';
+  actWrap.append(discardBtn, applyBtn);
+
+  openAiSheet('텍스트 다듬기', resultEl, actWrap);
+
+  try {
+    const prompt = `당신은 한국어 일기 작성 도우미입니다. 다음 음성 인식 텍스트를 자연스러운 일기 문체로 다듬어 주세요. 의미와 내용은 반드시 유지하고, 문장을 자연스럽게 정리해주세요. 다듬은 텍스트만 출력하고 설명은 쓰지 마세요.\n\n원문:\n${text}`;
+
+    let polished = '';
+    await callOllama(prompt, chunk => {
+      polished = chunk;
+      resultEl.textContent = chunk;
+    });
+
+    applyBtn.addEventListener('click', () => {
+      if (polished) {
+        finalText = polished + ' ';
+        setTranscript(polished);
+        updateAiBar();
+      }
+      closeAiSheet();
+      showToast('다듬기 적용됨');
+    });
+    discardBtn.addEventListener('click', closeAiSheet);
+
+  } catch (e) {
+    resultEl.textContent = e.message;
+    resultEl.style.color = 'var(--accent)';
+    discardBtn.textContent = '닫기';
+    discardBtn.addEventListener('click', closeAiSheet);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 텍스트 다듬기`;
+  }
+});
+
+// ── 2. 맞춤법 교정 ──────────────────────────
+document.getElementById('aiSpellBtn').addEventListener('click', async () => {
+  const text = transcriptBox.textContent.trim();
+  if (!text) return;
+
+  const btn = document.getElementById('aiSpellBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="ai-spin"></span> 교정 중`;
+
+  const resultEl = document.createElement('div');
+  resultEl.className = 'ai-result-text';
+
+  const actWrap = document.createElement('div');
+  actWrap.style.cssText = 'display:flex;gap:10px;width:100%';
+  const applyBtn = document.createElement('button');
+  applyBtn.className = 'btn-ai-apply';
+  applyBtn.textContent = '적용하기';
+  const discardBtn = document.createElement('button');
+  discardBtn.className = 'btn-ai-discard';
+  discardBtn.textContent = '취소';
+  actWrap.append(discardBtn, applyBtn);
+
+  openAiSheet('맞춤법 교정', resultEl, actWrap);
+
+  try {
+    const prompt = `다음 한국어 텍스트의 맞춤법과 띄어쓰기를 교정해주세요. 내용과 문체는 그대로 유지하고 맞춤법만 수정하세요. 교정된 텍스트만 출력하고 설명은 쓰지 마세요.\n\n원문:\n${text}`;
+
+    let corrected = '';
+    await callOllama(prompt, chunk => {
+      corrected = chunk;
+      resultEl.textContent = chunk;
+    });
+
+    applyBtn.addEventListener('click', () => {
+      if (corrected) {
+        finalText = corrected + ' ';
+        setTranscript(corrected);
+        updateAiBar();
+      }
+      closeAiSheet();
+      showToast('교정 적용됨');
+    });
+    discardBtn.addEventListener('click', closeAiSheet);
+
+  } catch (e) {
+    resultEl.textContent = e.message;
+    resultEl.style.color = 'var(--accent)';
+    discardBtn.textContent = '닫기';
+    discardBtn.addEventListener('click', closeAiSheet);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 맞춤법 교정`;
+  }
+});
+
+// ── 3. 일기 분석 (목록에서 호출) ─────────────
+async function runAiAnalysis(entryText, btn) {
+  const origHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="ai-spin"></span>`;
+
+  const bodyEl = document.createElement('div');
+
+  const mkSection = (label, value) => {
+    const s = document.createElement('div');
+    s.className = 'ai-result-section';
+    s.innerHTML = `<div class="ai-result-label">${label}</div><div class="ai-result-value" id="ai_${label}">...</div>`;
+    bodyEl.appendChild(s);
+    return s.querySelector(`#ai_${label}`);
+  };
+
+  const summaryEl  = mkSection('요약', '');
+  const moodEl     = mkSection('감정', '');
+  const keywordsEl = mkSection('키워드', '');
+
+  openAiSheet('일기 분석', bodyEl, null);
+
+  try {
+    const prompt = `다음 일기를 분석해주세요. 아래 형식으로 정확히 답해주세요:
+
+요약: [한 문장 요약]
+감정: [핵심 감정 1~2개, 예: 행복, 설렘, 불안, 감사, 슬픔 등]
+키워드: [핵심 단어 3개를 쉼표로 구분]
+
+일기:
+${entryText}`;
+
+    const result = await callOllama(prompt);
+
+    const lines = result.split('\n').filter(Boolean);
+    const get = (key) => {
+      const line = lines.find(l => l.startsWith(key));
+      return line ? line.replace(key, '').trim() : '—';
+    };
+
+    summaryEl.textContent  = get('요약:');
+    moodEl.textContent     = get('감정:');
+
+    // 키워드를 태그로 표시
+    const kw = get('키워드:');
+    if (kw && kw !== '—') {
+      const tagsEl = document.createElement('div');
+      tagsEl.className = 'ai-tags';
+      kw.split(/,|，/).forEach(k => {
+        const tag = document.createElement('span');
+        tag.className = 'ai-tag';
+        tag.textContent = k.trim();
+        tagsEl.appendChild(tag);
+      });
+      keywordsEl.innerHTML = '';
+      keywordsEl.appendChild(tagsEl);
+    } else {
+      keywordsEl.textContent = kw;
+    }
+
+  } catch (e) {
+    bodyEl.innerHTML = `<div style="color:var(--accent);font-size:14px">${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = origHtml;
+  }
+}
+
+// 목록의 AI 분석 버튼 — renderList 이후 aiBtn에 이벤트 연결
+// (renderList 내부에서 aiBtn.addEventListener 직접 연결됨)
 
 /* ── INIT ── */
 renderCalendar();
