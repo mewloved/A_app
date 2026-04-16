@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <title>Voice Diary</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -88,6 +92,30 @@ body {
   color: var(--muted);
   letter-spacing: 0.07em;
   font-weight: 500;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sync-badge {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background .4s;
+  flex-shrink: 0;
+}
+.sync-badge.syncing {
+  background: #f39c12;
+  animation: syncPulse 1.2s ease-in-out infinite;
+}
+.sync-badge.synced  { background: #27ae60; }
+.sync-badge.error   { background: var(--accent); }
+@keyframes syncPulse {
+  0%,100% { opacity:1; } 50% { opacity:.35; }
 }
 
 /* ── PANELS ── */
@@ -857,7 +885,10 @@ body {
       <span class="logo-text">Voice</span>
       <span class="logo-sub">diary</span>
     </div>
-    <div class="today-label" id="todayLabel"></div>
+    <div class="header-right">
+      <div class="sync-badge" id="syncBadge" title="Firebase 동기화 상태"></div>
+      <div class="today-label" id="todayLabel"></div>
+    </div>
   </div>
 
   <!-- ── TAB: RECORD ── -->
@@ -994,7 +1025,80 @@ body {
 
 <script>
 /* ═══════════════════════════════════════════
-   STORAGE
+   FIREBASE SETUP
+═══════════════════════════════════════════ */
+const firebaseConfig = {
+  apiKey: "AIzaSyAgR0wqWIFqPtLJHIVWhYxyGFHA2lyvO8g",
+  authDomain: "a-mew-project.firebaseapp.com",
+  projectId: "a-mew-project",
+  storageBucket: "a-mew-project.firebasestorage.app",
+  messagingSenderId: "816285168871",
+  appId: "1:816285168871:web:fe8a19353389bcc1a09e42",
+  measurementId: "G-C8822SGJQT"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db   = firebase.firestore();
+const auth = firebase.auth();
+
+let _uid = null;
+
+function setSyncBadge(state) {
+  const el = document.getElementById('syncBadge');
+  if (el) { el.className = 'sync-badge ' + state; el.title = { syncing:'동기화 중…', synced:'Firebase 동기화됨', error:'동기화 실패 (오프라인 모드)' }[state] || ''; }
+}
+
+function fsEntries() {
+  return db.collection('users').doc(_uid).collection('entries');
+}
+
+// Firestore → localStorage 전체 덮어쓰기
+async function pullFromFirestore() {
+  if (!_uid) return;
+  setSyncBadge('syncing');
+  try {
+    const snap = await fsEntries().orderBy('ts', 'desc').get();
+    const entries = snap.docs.map(d => d.data());
+    saveEntries(entries);
+    refreshActiveTab();
+    setSyncBadge('synced');
+  } catch (e) {
+    console.warn('[Firebase] pull failed:', e);
+    setSyncBadge('error');
+  }
+}
+
+// 실시간 동기화 리스너
+let _unsubscribe = null;
+function startRealtimeSync() {
+  if (_unsubscribe) _unsubscribe();
+  _unsubscribe = fsEntries()
+    .orderBy('ts', 'desc')
+    .onSnapshot(snap => {
+      const entries = snap.docs.map(d => d.data());
+      saveEntries(entries);
+      refreshActiveTab();
+      setSyncBadge('synced');
+    }, () => setSyncBadge('error'));
+}
+
+function refreshActiveTab() {
+  const tab = document.querySelector('.nav-btn.active')?.dataset.tab;
+  if (tab === 'list') renderList();
+  if (tab === 'calendar') renderCalendar();
+}
+
+// 익명 로그인
+setSyncBadge('syncing');
+auth.signInAnonymously()
+  .then(cred => {
+    _uid = cred.user.uid;
+    startRealtimeSync();
+  })
+  .catch(() => setSyncBadge('error'));
+
+/* ═══════════════════════════════════════════
+   STORAGE  (localStorage + Firestore 이중 저장)
 ═══════════════════════════════════════════ */
 const STORAGE_KEY = 'voiceDiary_entries';
 
@@ -1012,16 +1116,40 @@ function addEntry(text) {
   const now = new Date();
   const dateStr = toDateStr(now);
   const existing = entries.find(e => e.date === dateStr);
+
   if (existing) {
     existing.text = existing.text + ' ' + text.trim();
+    saveEntries(entries);
+    // Firestore 업데이트
+    if (_uid) {
+      setSyncBadge('syncing');
+      fsEntries().doc(String(existing.id)).update({ text: existing.text })
+        .then(() => setSyncBadge('synced'))
+        .catch(() => setSyncBadge('error'));
+    }
   } else {
-    entries.unshift({ id: Date.now(), text: text.trim(), date: dateStr, ts: now.toISOString() });
+    const id = Date.now();
+    const entry = { id, text: text.trim(), date: dateStr, ts: now.toISOString() };
+    entries.unshift(entry);
+    saveEntries(entries);
+    // Firestore 추가
+    if (_uid) {
+      setSyncBadge('syncing');
+      fsEntries().doc(String(id)).set(entry)
+        .then(() => setSyncBadge('synced'))
+        .catch(() => setSyncBadge('error'));
+    }
   }
-  saveEntries(entries);
 }
 
 function deleteEntry(id) {
   saveEntries(loadEntries().filter(e => e.id !== id));
+  if (_uid) {
+    setSyncBadge('syncing');
+    fsEntries().doc(String(id)).delete()
+      .then(() => setSyncBadge('synced'))
+      .catch(() => setSyncBadge('error'));
+  }
 }
 
 function updateEntry(id, newText) {
@@ -1029,6 +1157,12 @@ function updateEntry(id, newText) {
   const entry = entries.find(e => e.id === id);
   if (entry) entry.text = newText.trim();
   saveEntries(entries);
+  if (_uid) {
+    setSyncBadge('syncing');
+    fsEntries().doc(String(id)).update({ text: newText.trim() })
+      .then(() => setSyncBadge('synced'))
+      .catch(() => setSyncBadge('error'));
+  }
 }
 
 function toDateStr(d) {
