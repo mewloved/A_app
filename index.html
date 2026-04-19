@@ -475,13 +475,47 @@ body {
 /* ── DAY ENTRIES ── */
 .day-entries { margin-top: 22px; }
 
+.day-entries-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.day-entries-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.day-action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .15s, border-color .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.day-action-btn:active { color: var(--navy); border-color: var(--navy); }
+
+.day-photo-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .day-entries-title {
   font-size: 11px;
   font-weight: 700;
   color: var(--muted);
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  margin-bottom: 12px;
 }
 
 .day-entry-card {
@@ -1300,21 +1334,6 @@ body {
         <button class="btn btn-clear" id="clearBtn">지우기</button>
         <button class="btn btn-save" id="saveBtn">저장</button>
       </div>
-
-      <!-- 사진 첨부 -->
-      <div class="photo-upload-row">
-        <button class="btn-photo" id="photoBtn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          사진 추가
-        </button>
-        <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
-      </div>
-      <div class="photo-preview-strip" id="photoStrip"></div>
-
-      <div class="action-row">
-        <button class="btn btn-clear" id="clearBtn">지우기</button>
-        <button class="btn btn-save" id="saveBtn">저장</button>
-      </div>
     </div>
   </div>
 
@@ -1329,7 +1348,22 @@ body {
     <div class="cal-grid" id="calGrid"></div>
 
     <div class="day-entries" id="dayEntries" style="display:none">
-      <div class="day-entries-title" id="dayEntriesTitle"></div>
+      <div class="day-entries-head">
+        <div class="day-entries-title" id="dayEntriesTitle"></div>
+        <div class="day-entries-actions">
+          <button class="day-action-btn" id="dayPhotoBtn" title="사진 추가">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </button>
+          <button class="day-action-btn" id="dayExportBtn" title="텍스트 내보내기">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          </button>
+          <button class="day-action-btn" id="dayGcalBtn" title="Google 캘린더에 추가">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
+          </button>
+        </div>
+      </div>
+      <input type="file" id="dayPhotoInput" accept="image/*" multiple style="display:none">
+      <div class="day-photo-strip" id="dayPhotoStrip"></div>
       <div id="dayEntriesList"></div>
     </div>
   </div>
@@ -1595,7 +1629,6 @@ auth.onAuthStateChanged(user => {
    STORAGE  (localStorage + Firestore 이중 저장)
 ═══════════════════════════════════════════ */
 const STORAGE_KEY = 'voiceDiary_entries';
-let pendingPhotos = []; // 저장 전 임시 사진 목록 {base64}
 
 function loadEntries() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
@@ -1606,28 +1639,24 @@ function saveEntries(entries) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
 
-function addEntry(text, photos = []) {
+function addEntry(text) {
   const entries = loadEntries();
   const now = new Date();
   const dateStr = toDateStr(now);
   const existing = entries.find(e => e.date === dateStr);
-  let targetId;
 
   if (existing) {
     existing.text = existing.text + ' ' + text.trim();
-    if (photos.length) existing.hasPhoto = true;
     saveEntries(entries);
-    targetId = existing.id;
     if (_uid) {
       setSyncBadge('syncing');
-      fsEntries().doc(String(existing.id)).update({ text: existing.text, hasPhoto: !!photos.length || !!existing.hasPhoto })
+      fsEntries().doc(String(existing.id)).update({ text: existing.text })
         .then(() => setSyncBadge('synced'))
         .catch(() => setSyncBadge('error'));
     }
   } else {
     const id = Date.now();
-    targetId = id;
-    const entry = { id, text: text.trim(), date: dateStr, ts: now.toISOString(), hasPhoto: photos.length > 0 };
+    const entry = { id, text: text.trim(), date: dateStr, ts: now.toISOString() };
     entries.unshift(entry);
     saveEntries(entries);
     if (_uid) {
@@ -1637,18 +1666,15 @@ function addEntry(text, photos = []) {
         .catch(() => setSyncBadge('error'));
     }
   }
-
-  // 사진 로컬 저장 (base64 배열을 기존 photos에 추가)
-  if (photos.length) {
-    const existing_photos = loadPhotosLocal(targetId);
-    savePhotosLocal(targetId, [...existing_photos, ...photos.map(p => p.base64)]);
-  }
-  return targetId;
 }
 
-function deleteEntry(id) {
+function deleteEntry(id, date) {
   saveEntries(loadEntries().filter(e => e.id !== id));
-  deletePhotosLocal(id);
+  // 해당 날짜 사진도 삭제 (같은 날 다른 항목 없으면)
+  if (date) {
+    const remaining = loadEntries().filter(e => e.date === date);
+    if (!remaining.length) deletePhotosLocal(date);
+  }
   if (_uid) {
     setSyncBadge('syncing');
     fsEntries().doc(String(id)).delete()
@@ -1808,16 +1834,12 @@ clearBtn.addEventListener('click', () => {
   }
   finalText = '';
   setTranscript('');
-  pendingPhotos = [];
-  renderPhotoStrip();
 });
 
 saveBtn.addEventListener('click', () => {
   const text = transcriptBox.textContent.trim();
   if (!text) { showToast('저장할 내용이 없습니다'); return; }
-  addEntry(text, pendingPhotos);
-  pendingPhotos = [];
-  renderPhotoStrip();
+  addEntry(text);
   finalText = '';
   setTranscript('');
   showToast('저장되었습니다');
@@ -1898,11 +1920,33 @@ function renderDayEntries(dateStr) {
   const dayEntriesEl = document.getElementById('dayEntries');
   const listEl       = document.getElementById('dayEntriesList');
   const titleEl      = document.getElementById('dayEntriesTitle');
+  const stripEl      = document.getElementById('dayPhotoStrip');
   const entries      = loadEntries().filter(e => e.date === dateStr);
   const [y, m, d]    = dateStr.split('-');
   const dow = new Date(+y, +m-1, +d).getDay();
   titleEl.textContent = `${+m}월 ${+d}일 ${DAYS_KO[dow]}요일 · ${entries.length}개`;
   listEl.innerHTML = '';
+
+  // 날짜 사진 스트립
+  stripEl.innerHTML = '';
+  loadPhotosLocal(dateStr).forEach((src, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'photo-preview-thumb';
+    const img = document.createElement('img');
+    img.src = src;
+    img.addEventListener('click', () => openLightbox(src));
+    const del = document.createElement('button');
+    del.className = 'photo-del';
+    del.textContent = '✕';
+    del.addEventListener('click', () => {
+      const photos = loadPhotosLocal(dateStr);
+      photos.splice(i, 1);
+      savePhotosLocal(dateStr, photos);
+      renderDayEntries(dateStr);
+    });
+    wrap.append(img, del);
+    stripEl.appendChild(wrap);
+  });
 
   if (!entries.length) {
     listEl.innerHTML = '<div class="no-entry-msg">이 날의 기록이 없습니다</div>';
@@ -1920,16 +1964,17 @@ function renderDayEntries(dateStr) {
       delBtn.className = 'day-entry-del';
       delBtn.dataset.id = entry.id;
       delBtn.textContent = '✕';
-      card.append(timeEl, textEl);
-      renderEntryPhotos(card, entry.id);
-      card.appendChild(delBtn);
+      card.append(timeEl, textEl, delBtn);
       delBtn.addEventListener('click', () => {
-        if (confirm('이 항목을 삭제할까요?')) { deleteEntry(entry.id); renderDayEntries(dateStr); renderCalendar(); }
+        if (confirm('이 항목을 삭제할까요?')) { deleteEntry(entry.id, dateStr); renderDayEntries(dateStr); renderCalendar(); }
       });
       listEl.appendChild(card);
     });
   }
   dayEntriesEl.style.display = 'block';
+
+  // 액션 버튼에 현재 dateStr 바인딩
+  _bindDayActions(dateStr);
 }
 
 /* ═══════════════════════════════════════════
@@ -2014,7 +2059,7 @@ function renderList() {
       }
 
       card.append(dateEl, textEl, moreEl);
-      renderEntryPhotos(card, entry.id);
+      renderEntryPhotos(card, entry.date);
       if (metaEl.childElementCount) card.appendChild(metaEl);
       card.appendChild(actionsEl);
       listContent.appendChild(card);
@@ -2464,55 +2509,21 @@ function compressPhoto(file) {
   });
 }
 
-function savePhotoLocal(entryId, base64) {
-  localStorage.setItem('voiceDiary_photo_' + entryId, base64);
-}
-
-function loadPhotosLocal(entryId) {
-  const raw = localStorage.getItem('voiceDiary_photo_' + entryId);
+// 사진은 날짜(dateStr) 기준으로 저장 — 하루에 사진 한 세트
+function loadPhotosLocal(dateStr) {
+  const raw = localStorage.getItem('voiceDiary_photo_' + dateStr);
   if (!raw) return [];
   try { return JSON.parse(raw); } catch { return [raw]; }
 }
 
-function deletePhotosLocal(entryId) {
-  localStorage.removeItem('voiceDiary_photo_' + entryId);
+function savePhotosLocal(dateStr, arr) {
+  localStorage.setItem('voiceDiary_photo_' + dateStr, JSON.stringify(arr));
 }
 
-function savePhotosLocal(entryId, arr) {
-  localStorage.setItem('voiceDiary_photo_' + entryId, JSON.stringify(arr));
+function deletePhotosLocal(dateStr) {
+  localStorage.removeItem('voiceDiary_photo_' + dateStr);
 }
 
-// 녹음 탭 — 사진 미리보기 렌더
-function renderPhotoStrip() {
-  const strip = document.getElementById('photoStrip');
-  strip.innerHTML = '';
-  pendingPhotos.forEach((p, i) => {
-    const wrap = document.createElement('div');
-    wrap.className = 'photo-preview-thumb';
-    const img = document.createElement('img');
-    img.src = p.base64;
-    const del = document.createElement('button');
-    del.className = 'photo-del';
-    del.textContent = '✕';
-    del.addEventListener('click', () => { pendingPhotos.splice(i, 1); renderPhotoStrip(); });
-    wrap.append(img, del);
-    strip.appendChild(wrap);
-  });
-}
-
-document.getElementById('photoBtn').addEventListener('click', () => {
-  document.getElementById('photoInput').click();
-});
-
-document.getElementById('photoInput').addEventListener('change', async (e) => {
-  const files = Array.from(e.target.files);
-  for (const file of files) {
-    const base64 = await compressPhoto(file);
-    pendingPhotos.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2), base64 });
-  }
-  e.target.value = '';
-  renderPhotoStrip();
-});
 
 // 라이트박스
 function openLightbox(src) {
@@ -2526,9 +2537,9 @@ document.getElementById('lightbox').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
 });
 
-// 엔트리에 사진 표시 (공통 헬퍼)
-function renderEntryPhotos(container, entryId) {
-  const photos = loadPhotosLocal(entryId);
+// 사진 표시 (날짜 기준)
+function renderEntryPhotos(container, dateStr) {
+  const photos = loadPhotosLocal(dateStr);
   if (!photos.length) return;
   const row = document.createElement('div');
   row.className = 'entry-photo-row';
@@ -2554,6 +2565,76 @@ function renderSettings() {
 }
 
 document.getElementById('settingsSignOutBtn').addEventListener('click', handleSignOut);
+
+/* ═══════════════════════════════════════════
+   DAY ACTIONS — 사진 / 내보내기 / 구글 캘린더
+═══════════════════════════════════════════ */
+let _dayActionDate = null;
+
+function _bindDayActions(dateStr) {
+  _dayActionDate = dateStr;
+}
+
+// 사진 추가
+document.getElementById('dayPhotoBtn').addEventListener('click', () => {
+  if (_dayActionDate) document.getElementById('dayPhotoInput').click();
+});
+
+document.getElementById('dayPhotoInput').addEventListener('change', async (e) => {
+  if (!_dayActionDate) return;
+  const files = Array.from(e.target.files);
+  const existing = loadPhotosLocal(_dayActionDate);
+  for (const file of files) {
+    const base64 = await compressPhoto(file);
+    existing.push(base64);
+  }
+  savePhotosLocal(_dayActionDate, existing);
+  e.target.value = '';
+  renderDayEntries(_dayActionDate);
+});
+
+// 텍스트 내보내기 (해당 날짜)
+document.getElementById('dayExportBtn').addEventListener('click', () => {
+  if (!_dayActionDate) return;
+  const entries = loadEntries().filter(e => e.date === _dayActionDate);
+  if (!entries.length) { showToast('이 날의 기록이 없습니다'); return; }
+  const [y, m, d] = _dayActionDate.split('-');
+  let txt = `■ Voice Diary — ${+y}년 ${+m}월 ${+d}일\n${'─'.repeat(28)}\n\n`;
+  entries.forEach(e => {
+    txt += `[${formatDateTime(e.ts)}]\n${e.text}\n`;
+    if (e.emotion)        txt += `감정: ${e.emotion}\n`;
+    if (e.keywords?.length) txt += `키워드: ${e.keywords.join(', ')}\n`;
+    if (e.summary)        txt += `요약: ${e.summary}\n`;
+    txt += '\n';
+  });
+  downloadFile(txt, `diary-${_dayActionDate}.txt`, 'text/plain;charset=utf-8');
+  showToast('텍스트 파일로 내보냈어요');
+});
+
+// 구글 캘린더 추가 (URL 방식 — 추가 인증 불필요)
+document.getElementById('dayGcalBtn').addEventListener('click', () => {
+  if (!_dayActionDate) return;
+  const entries = loadEntries().filter(e => e.date === _dayActionDate);
+  if (!entries.length) { showToast('이 날의 기록이 없습니다'); return; }
+  const [y, m, d] = _dayActionDate.split('-');
+  const mm = String(m).padStart(2, '0');
+  const dd = String(d).padStart(2, '0');
+  const next = new Date(+y, +m - 1, +d + 1);
+  const endDate = `${next.getFullYear()}${String(next.getMonth()+1).padStart(2,'0')}${String(next.getDate()).padStart(2,'0')}`;
+  const startDate = `${y}${mm}${dd}`;
+  const title = `Voice Diary — ${+y}년 ${+m}월 ${+d}일`;
+  const details = entries.map(e => {
+    let s = `[${formatDateTime(e.ts)}] ${e.text}`;
+    if (e.emotion) s += `\n감정: ${e.emotion}`;
+    if (e.summary) s += `\n요약: ${e.summary}`;
+    return s;
+  }).join('\n\n');
+  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE`
+    + `&text=${encodeURIComponent(title)}`
+    + `&dates=${startDate}/${endDate}`
+    + `&details=${encodeURIComponent(details)}`;
+  window.open(url, '_blank');
+});
 
 /* ═══════════════════════════════════════════
    INIT
