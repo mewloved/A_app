@@ -466,6 +466,42 @@ body {
 
 .cal-cell.selected .dot { background: rgba(255,255,255,.65); }
 
+/* 사진 있는 셀 */
+.cal-cell.has-photo {
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+.cal-cell.has-photo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(0,0,0,.08) 0%, rgba(0,0,0,.52) 100%);
+  border-radius: inherit;
+}
+.cal-cell.has-photo span {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,.6);
+  font-weight: 700;
+}
+.cal-cell.has-photo .dot {
+  position: relative;
+  z-index: 1;
+  background: rgba(255,255,255,.85);
+}
+.cal-cell.has-photo.today {
+  border: 2px solid var(--accent);
+  background-color: transparent;
+}
+.cal-cell.has-photo.selected {
+  outline: 2.5px solid var(--accent);
+  outline-offset: 1px;
+  background-color: transparent !important;
+}
+.cal-cell.has-photo.selected span { color: #fff; }
+
 .cal-cell.sun { color: #c0392b; }
 .cal-cell.sat { color: #2980b9; }
 .cal-cell.selected.sun,
@@ -1898,9 +1934,17 @@ function renderCalendar() {
     if (dow === 6) cls += ' sat';
     if (dateStr === todayStr) cls += ' today';
     if (dateStr === selectedDateStr) cls += ' selected';
-    if (entryDates.has(dateStr)) cls += ' has-entry';
+    const hasEntry = entryDates.has(dateStr);
+    if (hasEntry) cls += ' has-entry';
+
+    // 사진 있으면 셀 배경으로 표시
+    const photos = hasEntry ? loadPhotosLocal(dateStr) : [];
+    if (photos.length) cls += ' has-photo';
+
     el.className = cls;
-    el.innerHTML = `<span>${d}</span>${entryDates.has(dateStr) ? '<div class="dot"></div>' : ''}`;
+    el.innerHTML = `<span>${d}</span>${hasEntry ? '<div class="dot"></div>' : ''}`;
+    if (photos.length) el.style.backgroundImage = `url(${photos[0]})`;
+
     el.addEventListener('click', () => { selectedDateStr = dateStr; renderCalendar(); renderDayEntries(dateStr); });
     grid.appendChild(el);
   }
@@ -1943,6 +1987,7 @@ function renderDayEntries(dateStr) {
       photos.splice(i, 1);
       savePhotosLocal(dateStr, photos);
       renderDayEntries(dateStr);
+      renderCalendar();
     });
     wrap.append(img, del);
     stripEl.appendChild(wrap);
@@ -2591,6 +2636,7 @@ document.getElementById('dayPhotoInput').addEventListener('change', async (e) =>
   savePhotosLocal(_dayActionDate, existing);
   e.target.value = '';
   renderDayEntries(_dayActionDate);
+  renderCalendar(); // 달력 셀 사진 즉시 반영
 });
 
 // 텍스트 내보내기 (해당 날짜)
