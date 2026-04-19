@@ -24,6 +24,17 @@
   --nav-h:   68px;
 }
 
+[data-theme="dark"] {
+  --bg:      #0d1117;
+  --navy:    #e8edf4;
+  --navy2:   #c8d0dc;
+  --surface: #161b22;
+  --surface2:#1c2330;
+  --border:  #2d3748;
+  --muted:   #6b7a8f;
+  --gold:    #b8976a;
+}
+
 body {
   font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
   background: var(--bg);
@@ -996,6 +1007,219 @@ body {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* ── SETTINGS TAB ── */
+.settings-panel { padding: 22px; }
+
+.settings-section {
+  margin-bottom: 28px;
+}
+.settings-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+}
+.settings-row-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+}
+.settings-row-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* toggle switch */
+.toggle-wrap { display: flex; align-items: center; gap: 8px; }
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background .2s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform .2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.toggle input:checked + .toggle-slider { background: var(--accent); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+/* export / account buttons */
+.btn-settings-action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+  text-align: left;
+  margin-bottom: 8px;
+  transition: background .15s;
+}
+.btn-settings-action:active { background: var(--surface2); }
+.btn-settings-action.danger { color: var(--accent); }
+
+.settings-ai-input {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--navy);
+  width: 140px;
+  outline: none;
+  font-family: monospace;
+}
+.settings-ai-input:focus { border-color: var(--navy); }
+
+/* ── PHOTO ── */
+.photo-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 4px;
+}
+.btn-photo {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.btn-photo:active { border-color: var(--navy); color: var(--navy); }
+.photo-preview-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+.photo-preview-thumb {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.photo-preview-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.photo-preview-thumb .photo-del {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0,0,0,.55);
+  border: none;
+  color: #fff;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* entry card photos */
+.entry-photo-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.entry-photo-thumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 10px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+/* lightbox */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.88);
+  z-index: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+.lightbox.open { opacity: 1; pointer-events: auto; }
+.lightbox img {
+  max-width: 95vw;
+  max-height: 85vh;
+  border-radius: 10px;
+  object-fit: contain;
+}
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255,255,255,.15);
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 </style>
 </head>
 <body>
@@ -1077,11 +1301,19 @@ body {
         <button class="btn btn-save" id="saveBtn">저장</button>
       </div>
 
-      <!-- AI 모델 설정 -->
-      <div class="ai-settings-wrap">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M2 12h2M20 12h2M12 2v2M12 20v2"/></svg>
-        <span class="ai-settings-label">Ollama 모델</span>
-        <input class="ai-model-input" id="aiModelInput" type="text" placeholder="gemma4" value="gemma4" spellcheck="false">
+      <!-- 사진 첨부 -->
+      <div class="photo-upload-row">
+        <button class="btn-photo" id="photoBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          사진 추가
+        </button>
+        <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
+      </div>
+      <div class="photo-preview-strip" id="photoStrip"></div>
+
+      <div class="action-row">
+        <button class="btn btn-clear" id="clearBtn">지우기</button>
+        <button class="btn btn-save" id="saveBtn">저장</button>
       </div>
     </div>
   </div>
@@ -1107,6 +1339,69 @@ body {
     <div id="listContent"></div>
   </div>
 
+  <!-- ── TAB: SETTINGS ── -->
+  <div class="panel settings-panel" id="tab-settings">
+
+    <div class="settings-section">
+      <div class="settings-section-title">화면</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">다크 모드</div>
+          <div class="settings-row-sub">어두운 배경으로 전환</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="darkToggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">AI 모델</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Ollama 모델</div>
+          <div class="settings-row-sub">로컬 실행 모델명</div>
+        </div>
+        <input class="settings-ai-input" id="aiModelInput" type="text" placeholder="gemma4" value="gemma4" spellcheck="false">
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">데이터 내보내기</div>
+      <button class="btn-settings-action" id="exportTxtBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        텍스트 파일로 내보내기 (.txt)
+      </button>
+      <button class="btn-settings-action" id="exportJsonBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        JSON으로 내보내기 (백업용)
+      </button>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">계정</div>
+      <div class="settings-row" id="settingsAccountRow">
+        <div>
+          <div class="settings-row-label" id="settingsUserName">로그인 안 됨</div>
+          <div class="settings-row-sub" id="settingsUserEmail"></div>
+        </div>
+      </div>
+      <button class="btn-settings-action danger" id="settingsSignOutBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        로그아웃
+      </button>
+    </div>
+
+    <div style="text-align:center;margin-top:20px;font-size:11px;color:var(--muted)">Voice Diary · Firebase + Ollama</div>
+  </div>
+
+</div>
+
+<!-- 라이트박스 -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">✕</button>
+  <img id="lightboxImg" src="" alt="">
 </div>
 
 <!-- BOTTOM NAV -->
@@ -1145,6 +1440,15 @@ body {
       </svg>
     </span>
     <span class="nav-label">목록</span>
+  </button>
+  <button class="nav-btn" data-tab="settings">
+    <span class="nav-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
+    </span>
+    <span class="nav-label">설정</span>
   </button>
 </nav>
 
@@ -1291,6 +1595,7 @@ auth.onAuthStateChanged(user => {
    STORAGE  (localStorage + Firestore 이중 저장)
 ═══════════════════════════════════════════ */
 const STORAGE_KEY = 'voiceDiary_entries';
+let pendingPhotos = []; // 저장 전 임시 사진 목록 {base64}
 
 function loadEntries() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
@@ -1301,28 +1606,30 @@ function saveEntries(entries) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
 
-function addEntry(text) {
+function addEntry(text, photos = []) {
   const entries = loadEntries();
   const now = new Date();
   const dateStr = toDateStr(now);
   const existing = entries.find(e => e.date === dateStr);
+  let targetId;
 
   if (existing) {
     existing.text = existing.text + ' ' + text.trim();
+    if (photos.length) existing.hasPhoto = true;
     saveEntries(entries);
-    // Firestore 업데이트
+    targetId = existing.id;
     if (_uid) {
       setSyncBadge('syncing');
-      fsEntries().doc(String(existing.id)).update({ text: existing.text })
+      fsEntries().doc(String(existing.id)).update({ text: existing.text, hasPhoto: !!photos.length || !!existing.hasPhoto })
         .then(() => setSyncBadge('synced'))
         .catch(() => setSyncBadge('error'));
     }
   } else {
     const id = Date.now();
-    const entry = { id, text: text.trim(), date: dateStr, ts: now.toISOString() };
+    targetId = id;
+    const entry = { id, text: text.trim(), date: dateStr, ts: now.toISOString(), hasPhoto: photos.length > 0 };
     entries.unshift(entry);
     saveEntries(entries);
-    // Firestore 추가
     if (_uid) {
       setSyncBadge('syncing');
       fsEntries().doc(String(id)).set(entry)
@@ -1330,10 +1637,18 @@ function addEntry(text) {
         .catch(() => setSyncBadge('error'));
     }
   }
+
+  // 사진 로컬 저장 (base64 배열을 기존 photos에 추가)
+  if (photos.length) {
+    const existing_photos = loadPhotosLocal(targetId);
+    savePhotosLocal(targetId, [...existing_photos, ...photos.map(p => p.base64)]);
+  }
+  return targetId;
 }
 
 function deleteEntry(id) {
   saveEntries(loadEntries().filter(e => e.id !== id));
+  deletePhotosLocal(id);
   if (_uid) {
     setSyncBadge('syncing');
     fsEntries().doc(String(id)).delete()
@@ -1400,6 +1715,7 @@ function switchTab(name) {
   document.getElementById('tab-' + name).classList.add('active');
   if (name === 'calendar') renderCalendar();
   if (name === 'list') renderList();
+  if (name === 'settings') renderSettings();
 }
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -1492,12 +1808,16 @@ clearBtn.addEventListener('click', () => {
   }
   finalText = '';
   setTranscript('');
+  pendingPhotos = [];
+  renderPhotoStrip();
 });
 
 saveBtn.addEventListener('click', () => {
   const text = transcriptBox.textContent.trim();
   if (!text) { showToast('저장할 내용이 없습니다'); return; }
-  addEntry(text);
+  addEntry(text, pendingPhotos);
+  pendingPhotos = [];
+  renderPhotoStrip();
   finalText = '';
   setTranscript('');
   showToast('저장되었습니다');
@@ -1590,12 +1910,20 @@ function renderDayEntries(dateStr) {
     entries.forEach(entry => {
       const card = document.createElement('div');
       card.className = 'day-entry-card';
-      card.innerHTML = `
-        <div class="day-entry-time">${formatDateTime(entry.ts)}</div>
-        <div class="day-entry-text">${escHtml(entry.text)}</div>
-        <button class="day-entry-del" data-id="${entry.id}">✕</button>
-      `;
-      card.querySelector('.day-entry-del').addEventListener('click', () => {
+      const timeEl = document.createElement('div');
+      timeEl.className = 'day-entry-time';
+      timeEl.textContent = formatDateTime(entry.ts);
+      const textEl = document.createElement('div');
+      textEl.className = 'day-entry-text';
+      textEl.textContent = entry.text;
+      const delBtn = document.createElement('button');
+      delBtn.className = 'day-entry-del';
+      delBtn.dataset.id = entry.id;
+      delBtn.textContent = '✕';
+      card.append(timeEl, textEl);
+      renderEntryPhotos(card, entry.id);
+      card.appendChild(delBtn);
+      delBtn.addEventListener('click', () => {
         if (confirm('이 항목을 삭제할까요?')) { deleteEntry(entry.id); renderDayEntries(dateStr); renderCalendar(); }
       });
       listEl.appendChild(card);
@@ -1686,6 +2014,7 @@ function renderList() {
       }
 
       card.append(dateEl, textEl, moreEl);
+      renderEntryPhotos(card, entry.id);
       if (metaEl.childElementCount) card.appendChild(metaEl);
       card.appendChild(actionsEl);
       listContent.appendChild(card);
@@ -2051,7 +2380,184 @@ ${entryText}`;
 // 목록의 AI 분석 버튼 — renderList 이후 aiBtn에 이벤트 연결
 // (renderList 내부에서 aiBtn.addEventListener 직접 연결됨)
 
-/* ── INIT ── */
+/* ═══════════════════════════════════════════
+   DARK MODE
+═══════════════════════════════════════════ */
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
+  localStorage.setItem('voiceDiary_theme', dark ? 'dark' : 'light');
+  const toggle = document.getElementById('darkToggle');
+  if (toggle) toggle.checked = dark;
+}
+
+(function initTheme() {
+  const saved = localStorage.getItem('voiceDiary_theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(saved ? saved === 'dark' : prefersDark);
+})();
+
+document.getElementById('darkToggle').addEventListener('change', e => applyTheme(e.target.checked));
+
+/* ═══════════════════════════════════════════
+   EXPORT
+═══════════════════════════════════════════ */
+function downloadFile(content, filename, mime) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+  a.download = filename;
+  a.click();
+}
+
+function exportTxt() {
+  const entries = loadEntries();
+  if (!entries.length) { showToast('저장된 일기가 없어요'); return; }
+  const sorted = [...entries].sort((a, b) => a.ts.localeCompare(b.ts));
+  let txt = '■ Voice Diary 내보내기\n' + new Date().toLocaleDateString('ko-KR') + '\n\n';
+  let lastDate = '';
+  sorted.forEach(e => {
+    if (e.date !== lastDate) {
+      const [y, m, d] = e.date.split('-');
+      txt += `\n═══ ${y}년 ${+m}월 ${+d}일 ═══\n`;
+      lastDate = e.date;
+    }
+    txt += `[${formatDateTime(e.ts)}] ${e.text}\n`;
+    if (e.emotion)  txt += `  감정: ${e.emotion}\n`;
+    if (e.keywords?.length) txt += `  키워드: ${e.keywords.join(', ')}\n`;
+    if (e.summary)  txt += `  요약: ${e.summary}\n`;
+    txt += '\n';
+  });
+  downloadFile(txt, `voice-diary-${toDateStr(new Date())}.txt`, 'text/plain;charset=utf-8');
+  showToast('텍스트 파일로 내보냈어요');
+}
+
+function exportJson() {
+  const entries = loadEntries();
+  if (!entries.length) { showToast('저장된 일기가 없어요'); return; }
+  downloadFile(JSON.stringify(entries, null, 2), `voice-diary-${toDateStr(new Date())}.json`, 'application/json');
+  showToast('JSON으로 내보냈어요');
+}
+
+document.getElementById('exportTxtBtn').addEventListener('click', exportTxt);
+document.getElementById('exportJsonBtn').addEventListener('click', exportJson);
+
+/* ═══════════════════════════════════════════
+   PHOTO — Canvas 압축 저장
+═══════════════════════════════════════════ */
+const PHOTO_MAX = 800;   // px (long side)
+const PHOTO_Q   = 0.72;  // JPEG quality
+
+function compressPhoto(file) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, PHOTO_MAX / Math.max(img.width, img.height));
+      const w = Math.round(img.width  * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', PHOTO_Q));
+    };
+    img.src = url;
+  });
+}
+
+function savePhotoLocal(entryId, base64) {
+  localStorage.setItem('voiceDiary_photo_' + entryId, base64);
+}
+
+function loadPhotosLocal(entryId) {
+  const raw = localStorage.getItem('voiceDiary_photo_' + entryId);
+  if (!raw) return [];
+  try { return JSON.parse(raw); } catch { return [raw]; }
+}
+
+function deletePhotosLocal(entryId) {
+  localStorage.removeItem('voiceDiary_photo_' + entryId);
+}
+
+function savePhotosLocal(entryId, arr) {
+  localStorage.setItem('voiceDiary_photo_' + entryId, JSON.stringify(arr));
+}
+
+// 녹음 탭 — 사진 미리보기 렌더
+function renderPhotoStrip() {
+  const strip = document.getElementById('photoStrip');
+  strip.innerHTML = '';
+  pendingPhotos.forEach((p, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'photo-preview-thumb';
+    const img = document.createElement('img');
+    img.src = p.base64;
+    const del = document.createElement('button');
+    del.className = 'photo-del';
+    del.textContent = '✕';
+    del.addEventListener('click', () => { pendingPhotos.splice(i, 1); renderPhotoStrip(); });
+    wrap.append(img, del);
+    strip.appendChild(wrap);
+  });
+}
+
+document.getElementById('photoBtn').addEventListener('click', () => {
+  document.getElementById('photoInput').click();
+});
+
+document.getElementById('photoInput').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files);
+  for (const file of files) {
+    const base64 = await compressPhoto(file);
+    pendingPhotos.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2), base64 });
+  }
+  e.target.value = '';
+  renderPhotoStrip();
+});
+
+// 라이트박스
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+document.getElementById('lightboxClose').addEventListener('click', () => {
+  document.getElementById('lightbox').classList.remove('open');
+});
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+
+// 엔트리에 사진 표시 (공통 헬퍼)
+function renderEntryPhotos(container, entryId) {
+  const photos = loadPhotosLocal(entryId);
+  if (!photos.length) return;
+  const row = document.createElement('div');
+  row.className = 'entry-photo-row';
+  photos.forEach(src => {
+    const img = document.createElement('img');
+    img.className = 'entry-photo-thumb';
+    img.src = src;
+    img.addEventListener('click', () => openLightbox(src));
+    row.appendChild(img);
+  });
+  container.appendChild(row);
+}
+
+/* ═══════════════════════════════════════════
+   SETTINGS TAB
+═══════════════════════════════════════════ */
+function renderSettings() {
+  const user = auth.currentUser;
+  document.getElementById('settingsUserName').textContent = user?.displayName || user?.email || '로그인 안 됨';
+  document.getElementById('settingsUserEmail').textContent = user?.email || '';
+  const dark = localStorage.getItem('voiceDiary_theme') === 'dark';
+  document.getElementById('darkToggle').checked = dark;
+}
+
+document.getElementById('settingsSignOutBtn').addEventListener('click', handleSignOut);
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
 renderCalendar();
 </script>
 
