@@ -1545,6 +1545,67 @@ body {
   border: 1px solid var(--border);
 }
 
+/* ── SEARCH ── */
+.search-wrap {
+  padding: 0 0 16px;
+}
+.search-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  padding: 10px 18px;
+  font-size: 14px;
+  color: var(--navy);
+  font-family: inherit;
+  outline: none;
+  transition: border-color .2s;
+}
+.search-input:focus { border-color: var(--navy); }
+.search-input::placeholder { color: var(--muted); }
+
+/* Day time-of-day section label */
+.day-time-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 12px 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.day-time-label:first-child { padding-top: 2px; }
+
+/* Inline location edit */
+.loc-edit-btn {
+  background: none;
+  border: none;
+  padding: 0 2px;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity .15s;
+}
+.loc-edit-btn:hover { opacity: 1; }
+.loc-inline-input {
+  border: none;
+  border-bottom: 1.5px solid var(--navy);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navy);
+  font-family: inherit;
+  outline: none;
+  min-width: 80px;
+  max-width: 160px;
+}
+
 /* lightbox */
 .lightbox {
   position: fixed;
@@ -1721,6 +1782,9 @@ body {
 
   <!-- ── TAB: LIST ── -->
   <div class="panel list-panel" id="tab-list">
+    <div class="search-wrap">
+      <input class="search-input" id="listSearch" type="search" placeholder="일기 검색…" autocomplete="off">
+    </div>
     <div id="listContent"></div>
   </div>
 
@@ -2166,6 +2230,31 @@ let _currentLocation = null; // { label: string, lat, lon }
 
 const PIN_SVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
 
+function renderRecLocation(label) {
+  const el = document.getElementById('recLocation');
+  if (!label) { el.innerHTML = ''; el.className = 'rec-location'; return; }
+  el.className = 'rec-location';
+  el.innerHTML = `${PIN_SVG} <span class="rec-loc-text">${label}</span><button class="loc-edit-btn" title="위치 수정">✎</button>`;
+  el.querySelector('.loc-edit-btn').addEventListener('click', () => {
+    const span = el.querySelector('.rec-loc-text');
+    const current = span.textContent;
+    const inp = document.createElement('input');
+    inp.className = 'loc-inline-input';
+    inp.value = current;
+    span.replaceWith(inp);
+    el.querySelector('.loc-edit-btn').style.display = 'none';
+    inp.focus(); inp.select();
+    const commit = () => {
+      const v = inp.value.trim() || current;
+      if (_currentLocation) _currentLocation.label = v;
+      else _currentLocation = { label: v, lat: null, lon: null };
+      renderRecLocation(v);
+    };
+    inp.addEventListener('blur', commit);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); commit(); } });
+  });
+}
+
 async function reverseGeocode(lat, lon) {
   // BigDataCloud 무료 API — 키 불필요
   const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
@@ -2186,14 +2275,13 @@ function requestLocation() {
         const { latitude: lat, longitude: lon } = pos.coords;
         const label = await reverseGeocode(lat, lon);
         _currentLocation = { label, lat, lon };
-        el.className = 'rec-location';
-        el.innerHTML = label ? `${PIN_SVG} ${label}` : '';
+        renderRecLocation(label);
       } catch {
-        el.innerHTML = '';
+        renderRecLocation(null);
         _currentLocation = null;
       }
     },
-    () => { el.innerHTML = ''; _currentLocation = null; },
+    () => { renderRecLocation(null); _currentLocation = null; },
     { timeout: 8000, maximumAge: 300000 }
   );
 }
@@ -2489,7 +2577,19 @@ function renderDayEntries(dateStr) {
   if (!entries.length) {
     listEl.innerHTML = '<div class="no-entry-msg">이 날의 기록이 없습니다</div>';
   } else {
-    entries.forEach(entry => {
+    // Sort ascending by time so entries appear in chronological order
+    const sorted = [...entries].sort((a, b) => a.ts.localeCompare(b.ts));
+    let lastPeriod = null;
+    const periodIcons = { '아침': '🌅', '오후': '☀️', '저녁': '🌙' };
+    sorted.forEach(entry => {
+      const period = getPeriod(entry.ts);
+      if (period !== lastPeriod) {
+        const label = document.createElement('div');
+        label.className = 'day-time-label';
+        label.textContent = `${periodIcons[period]} ${period}`;
+        listEl.appendChild(label);
+        lastPeriod = period;
+      }
       const card = document.createElement('div');
       card.className = 'day-entry-card';
       const timeEl = document.createElement('div');
@@ -2525,9 +2625,11 @@ function renderDayEntries(dateStr) {
 /* ═══════════════════════════════════════════
    LIST
 ═══════════════════════════════════════════ */
-function renderList() {
+function renderList(filter) {
   const listContent = document.getElementById('listContent');
-  const entries = loadEntries();
+  const q = (filter || '').trim().toLowerCase();
+  let entries = loadEntries();
+  if (q) entries = entries.filter(e => e.text.toLowerCase().includes(q));
 
   if (!entries.length) {
     listContent.innerHTML = `
@@ -2736,6 +2838,13 @@ function renderList() {
       });
     });
   });
+}
+
+function getPeriod(isoStr) {
+  const h = new Date(isoStr).getHours();
+  if (h < 12) return '아침';
+  if (h < 18) return '오후';
+  return '저녁';
 }
 
 function escHtml(str) {
@@ -3277,6 +3386,13 @@ document.getElementById('dayGcalBtn').addEventListener('click', () => {
     + `&dates=${startDate}/${endDate}`
     + `&details=${encodeURIComponent(details)}`;
   window.open(url, '_blank');
+});
+
+/* ═══════════════════════════════════════════
+   SEARCH
+═══════════════════════════════════════════ */
+document.getElementById('listSearch').addEventListener('input', e => {
+  renderList(e.target.value);
 });
 
 /* ═══════════════════════════════════════════
