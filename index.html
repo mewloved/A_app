@@ -237,8 +237,45 @@ body {
   color: var(--muted);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   font-weight: 500;
+}
+
+.rec-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 6px;
+  min-height: 18px;
+  letter-spacing: 0.02em;
+}
+.rec-location:empty { display: none; }
+.rec-location.loading { color: var(--muted); font-weight: 400; }
+
+/* 목록 타임라인 위치 배지 */
+.tl-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+
+/* 캘린더 day entry 위치 */
+.day-entry-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-top: 3px;
 }
 
 .mic-wrap {
@@ -1582,6 +1619,7 @@ body {
   <div class="panel active" id="tab-record">
     <div class="recorder-panel">
       <div class="rec-date" id="recDate"></div>
+      <div class="rec-location" id="recLocation"></div>
 
       <div class="mic-wrap">
         <button class="mic-btn" id="micBtn" title="마이크">
@@ -1957,19 +1995,24 @@ function addEntry(text) {
   const now = new Date();
   const dateStr = toDateStr(now);
   const existing = entries.find(e => e.date === dateStr);
+  const loc = _currentLocation?.label || null;
 
   if (existing) {
     existing.text = existing.text + ' ' + text.trim();
+    if (loc && !existing.location) existing.location = loc;
     saveEntries(entries);
     if (_uid) {
       setSyncBadge('syncing');
-      fsEntries().doc(String(existing.id)).update({ text: existing.text })
+      const upd = { text: existing.text };
+      if (loc && !existing.location) upd.location = loc;
+      fsEntries().doc(String(existing.id)).update(upd)
         .then(() => setSyncBadge('synced'))
         .catch(() => setSyncBadge('error'));
     }
   } else {
     const id = Date.now();
     const entry = { id, text: text.trim(), date: dateStr, ts: now.toISOString() };
+    if (loc) entry.location = loc;
     entries.unshift(entry);
     saveEntries(entries);
     if (_uid) {
@@ -2086,6 +2129,7 @@ function switchTab(name) {
   document.getElementById('tab-' + name).classList.add('active');
   if (name === 'calendar') renderCalendar();
   if (name === 'list') renderList();
+  if (name === 'record') requestLocation();
   if (name === 'settings') renderSettings();
 }
 
@@ -2114,6 +2158,48 @@ document.getElementById('todayLabel').textContent =
   `${MONTHS[now0.getMonth()]} ${now0.getDate()}, ${now0.getFullYear()}`;
 document.getElementById('recDate').textContent =
   `${now0.getFullYear()}년 ${now0.getMonth()+1}월 ${now0.getDate()}일 ${DAYS_KO[now0.getDay()]}요일`;
+
+/* ═══════════════════════════════════════════
+   LOCATION
+═══════════════════════════════════════════ */
+let _currentLocation = null; // { label: string, lat, lon }
+
+const PIN_SVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+
+async function reverseGeocode(lat, lon) {
+  // BigDataCloud 무료 API — 키 불필요
+  const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ko`;
+  const res  = await fetch(url);
+  const data = await res.json();
+  // 우선순위: locality(동/읍) → city(시) → principalSubdivision(도/시)
+  return data.locality || data.city || data.principalSubdivision || data.countryName || '';
+}
+
+function requestLocation() {
+  const el = document.getElementById('recLocation');
+  if (!navigator.geolocation) return;
+  el.className = 'rec-location loading';
+  el.innerHTML = `${PIN_SVG} 위치 확인 중…`;
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      try {
+        const { latitude: lat, longitude: lon } = pos.coords;
+        const label = await reverseGeocode(lat, lon);
+        _currentLocation = { label, lat, lon };
+        el.className = 'rec-location';
+        el.innerHTML = label ? `${PIN_SVG} ${label}` : '';
+      } catch {
+        el.innerHTML = '';
+        _currentLocation = null;
+      }
+    },
+    () => { el.innerHTML = ''; _currentLocation = null; },
+    { timeout: 8000, maximumAge: 300000 }
+  );
+}
+
+// 녹음 탭 진입 시 위치 자동 취득
+requestLocation();
 
 function setTranscript(text) {
   transcriptBox.textContent = text;
@@ -2416,7 +2502,14 @@ function renderDayEntries(dateStr) {
       delBtn.className = 'day-entry-del';
       delBtn.dataset.id = entry.id;
       delBtn.textContent = '✕';
-      card.append(timeEl, textEl, delBtn);
+      card.append(timeEl, textEl);
+      if (entry.location) {
+        const loc = document.createElement('div');
+        loc.className = 'day-entry-location';
+        loc.innerHTML = `${PIN_SVG} ${entry.location}`;
+        card.appendChild(loc);
+      }
+      card.appendChild(delBtn);
       delBtn.addEventListener('click', () => {
         if (confirm('이 항목을 삭제할까요?')) { deleteEntry(entry.id, dateStr); renderDayEntries(dateStr); renderCalendar(); }
       });
@@ -2511,6 +2604,15 @@ function renderList() {
     dateLabel.className = 'tl-date-label';
     dateLabel.textContent = `${+y}년 ${+m}월 ${+d}일 ${DAYS_KO[dow]}요일`;
 
+    // 위치 배지 (저장된 위치가 있으면)
+    const entryLoc = dateEntries.find(e => e.location)?.location;
+    let locEl = null;
+    if (entryLoc) {
+      locEl = document.createElement('div');
+      locEl.className = 'tl-location';
+      locEl.innerHTML = `${PIN_SVG} ${entryLoc}`;
+    }
+
     const textEl = document.createElement('div');
     textEl.className = 'tl-text';
     textEl.textContent = combinedText;
@@ -2519,7 +2621,9 @@ function renderList() {
     timeEl.className = 'tl-time';
     timeEl.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${formatDateTime(firstEntry.ts)}`;
 
-    body.append(dateLabel, textEl, timeEl);
+    body.appendChild(dateLabel);
+    if (locEl) body.appendChild(locEl);
+    body.append(textEl, timeEl);
 
     // 감정/키워드 배지
     const hasMeta = dateEntries.some(e => e.emotion || e.keywords?.length);
