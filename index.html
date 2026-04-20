@@ -1642,6 +1642,156 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+/* ── SETTINGS REDESIGN ── */
+.settings-account-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  margin-bottom: 24px;
+}
+.settings-avatar-img {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+}
+.settings-avatar-fallback {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: 0;
+}
+.settings-account-info { flex: 1; min-width: 0; }
+.settings-account-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.settings-account-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.settings-sync-time {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+  letter-spacing: 0.01em;
+}
+.settings-group {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.settings-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 16px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  cursor: pointer;
+  transition: background .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.settings-nav-row:last-child { border-bottom: none; }
+.settings-nav-row:active { background: var(--surface2); }
+.settings-nav-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+.settings-nav-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+  letter-spacing: 0.01em;
+}
+.settings-nav-arrow {
+  font-size: 20px;
+  color: var(--muted);
+  font-weight: 300;
+  line-height: 1;
+}
+.settings-inner-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.settings-back-btn {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  width: 34px; height: 34px;
+  font-size: 22px;
+  color: var(--navy);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  flex-shrink: 0;
+  padding-bottom: 1px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s;
+}
+.settings-back-btn:active { background: var(--surface2); }
+.settings-inner-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 0.01em;
+}
+.btn-settings-signout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  margin-top: 4px;
+  background: none;
+  border: 1.5px solid rgba(200,16,46,.25);
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background .15s;
+  -webkit-tap-highlight-color: transparent;
+  letter-spacing: 0.02em;
+}
+.btn-settings-signout:active { background: rgba(200,16,46,.06); }
 </style>
 </head>
 <body>
@@ -1791,58 +1941,141 @@ body {
   <!-- ── TAB: SETTINGS ── -->
   <div class="panel settings-panel" id="tab-settings">
 
-    <div class="settings-section">
-      <div class="settings-section-title">화면</div>
-      <div class="settings-row">
-        <div>
-          <div class="settings-row-label">다크 모드</div>
-          <div class="settings-row-sub">어두운 배경으로 전환</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" id="darkToggle">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-    </div>
+    <!-- ── 메인 설정 화면 ── -->
+    <div id="settingsMain">
 
-    <div class="settings-section">
-      <div class="settings-section-title">AI 모델</div>
-      <div class="settings-row">
-        <div>
-          <div class="settings-row-label">Ollama 모델</div>
-          <div class="settings-row-sub">로컬 실행 모델명</div>
-        </div>
-        <input class="settings-ai-input" id="aiModelInput" type="text" placeholder="gemma4" value="gemma4" spellcheck="false">
-      </div>
-    </div>
-
-    <div class="settings-section">
-      <div class="settings-section-title">데이터 내보내기</div>
-      <button class="btn-settings-action" id="exportTxtBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-        텍스트 파일로 내보내기 (.txt)
-      </button>
-      <button class="btn-settings-action" id="exportJsonBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        JSON으로 내보내기 (백업용)
-      </button>
-    </div>
-
-    <div class="settings-section">
-      <div class="settings-section-title">계정</div>
-      <div class="settings-row" id="settingsAccountRow">
-        <div>
-          <div class="settings-row-label" id="settingsUserName">로그인 안 됨</div>
-          <div class="settings-row-sub" id="settingsUserEmail"></div>
+      <!-- 계정 카드 -->
+      <div class="settings-account-card">
+        <div id="settingsAvatarWrap"></div>
+        <div class="settings-account-info">
+          <div class="settings-account-name" id="settingsUserName">로그인 안 됨</div>
+          <div class="settings-account-sub" id="settingsUserEmail"></div>
+          <div class="settings-sync-time" id="settingsSyncTime"></div>
         </div>
       </div>
-      <button class="btn-settings-action danger" id="settingsSignOutBtn">
+
+      <!-- 화면 섹션 -->
+      <div class="settings-section">
+        <div class="settings-section-title">화면</div>
+        <div class="settings-group">
+          <button class="settings-nav-row" id="navDarkMode">
+            <span class="settings-nav-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+            </span>
+            <span class="settings-nav-label">다크 모드</span>
+            <span class="settings-nav-arrow">›</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 데이터 섹션 -->
+      <div class="settings-section">
+        <div class="settings-section-title">데이터</div>
+        <div class="settings-group">
+          <button class="settings-nav-row" id="navBackup">
+            <span class="settings-nav-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            </span>
+            <span class="settings-nav-label">백업 & 동기화</span>
+            <span class="settings-nav-arrow">›</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- AI 섹션 -->
+      <div class="settings-section">
+        <div class="settings-section-title">AI</div>
+        <div class="settings-group">
+          <button class="settings-nav-row" id="navAiModel">
+            <span class="settings-nav-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+            </span>
+            <span class="settings-nav-label">AI 모델 설정</span>
+            <span class="settings-nav-arrow">›</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 로그아웃 -->
+      <button class="btn-settings-signout" id="settingsSignOutBtn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         로그아웃
       </button>
+
+      <div style="text-align:center;margin-top:20px;font-size:11px;color:var(--muted)">Voice Diary · Firebase + Ollama</div>
     </div>
 
-    <div style="text-align:center;margin-top:20px;font-size:11px;color:var(--muted)">Voice Diary · Firebase + Ollama</div>
+    <!-- ── 내부 페이지: 다크 모드 ── -->
+    <div id="settingsPageDark" class="settings-inner-page" style="display:none">
+      <div class="settings-inner-header">
+        <button class="settings-back-btn" id="backFromDark">‹</button>
+        <span class="settings-inner-title">다크 모드</span>
+      </div>
+      <div class="settings-section">
+        <div class="settings-group">
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">다크 모드</div>
+              <div class="settings-row-sub">어두운 배경으로 전환</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="darkToggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 내부 페이지: 백업 & 동기화 ── -->
+    <div id="settingsPageBackup" class="settings-inner-page" style="display:none">
+      <div class="settings-inner-header">
+        <button class="settings-back-btn" id="backFromBackup">‹</button>
+        <span class="settings-inner-title">백업 & 동기화</span>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title">내보내기</div>
+        <button class="btn-settings-action" id="exportTxtBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          텍스트로 내보내기 (.txt)
+        </button>
+        <button class="btn-settings-action" id="exportJsonBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          JSON으로 내보내기 (백업)
+        </button>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title">불러오기</div>
+        <button class="btn-settings-action" id="importJsonBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          JSON 불러오기
+        </button>
+        <input type="file" id="importJsonInput" accept=".json" style="display:none">
+      </div>
+    </div>
+
+    <!-- ── 내부 페이지: AI 모델 설정 ── -->
+    <div id="settingsPageAi" class="settings-inner-page" style="display:none">
+      <div class="settings-inner-header">
+        <button class="settings-back-btn" id="backFromAi">‹</button>
+        <span class="settings-inner-title">AI 모델 설정</span>
+      </div>
+      <div class="settings-section">
+        <div class="settings-group">
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Ollama 모델</div>
+              <div class="settings-row-sub">로컬 실행 모델명</div>
+            </div>
+            <input class="settings-ai-input" id="aiModelInput" type="text" placeholder="gemma4" value="gemma4" spellcheck="false">
+          </div>
+        </div>
+        <div style="padding:12px 16px;font-size:12px;color:var(--muted);line-height:1.6;border-top:1px solid var(--border)">
+          Ollama가 실행 중이어야 AI 기능을 사용할 수 있습니다. 기본값: <code style="font-family:monospace;font-size:12px">gemma4</code>
+        </div>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -1934,10 +2167,12 @@ const db   = firebase.firestore();
 const auth = firebase.auth();
 
 let _uid = null;
+let _lastSyncTime = null;
 
 function setSyncBadge(state) {
   const el = document.getElementById('syncBadge');
   if (el) { el.className = 'sync-badge ' + state; el.title = { syncing:'동기화 중…', synced:'Firebase 동기화됨', error:'동기화 실패 (오프라인 모드)' }[state] || ''; }
+  if (state === 'synced') _lastSyncTime = new Date();
 }
 
 function fsEntries() {
@@ -3272,15 +3507,82 @@ function renderEntryPhotos(container, dateStr) {
 /* ═══════════════════════════════════════════
    SETTINGS TAB
 ═══════════════════════════════════════════ */
-function renderSettings() {
-  const user = auth.currentUser;
-  document.getElementById('settingsUserName').textContent = user?.displayName || user?.email || '로그인 안 됨';
-  document.getElementById('settingsUserEmail').textContent = user?.email || '';
-  const dark = localStorage.getItem('voiceDiary_theme') === 'dark';
-  document.getElementById('darkToggle').checked = dark;
+function showSettingsMain() {
+  document.getElementById('settingsMain').style.display = '';
+  document.querySelectorAll('.settings-inner-page').forEach(p => p.style.display = 'none');
 }
 
+function openSettingsPage(pageId) {
+  document.getElementById('settingsMain').style.display = 'none';
+  document.querySelectorAll('.settings-inner-page').forEach(p => p.style.display = 'none');
+  document.getElementById(pageId).style.display = '';
+}
+
+function renderSettings() {
+  showSettingsMain();
+  const user = auth.currentUser;
+
+  // Avatar
+  const wrap = document.getElementById('settingsAvatarWrap');
+  wrap.innerHTML = '';
+  if (user?.photoURL) {
+    const img = document.createElement('img');
+    img.className = 'settings-avatar-img';
+    img.src = user.photoURL;
+    img.alt = user.displayName || '';
+    wrap.appendChild(img);
+  } else {
+    const fb = document.createElement('div');
+    fb.className = 'settings-avatar-fallback';
+    fb.textContent = (user?.displayName || user?.email || '?')[0].toUpperCase();
+    wrap.appendChild(fb);
+  }
+
+  document.getElementById('settingsUserName').textContent = user?.displayName || user?.email || '로그인 안 됨';
+  document.getElementById('settingsUserEmail').textContent = user?.email || '';
+
+  // Last sync time
+  const syncEl = document.getElementById('settingsSyncTime');
+  syncEl.textContent = _lastSyncTime
+    ? `마지막 동기화 ${_lastSyncTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`
+    : '';
+
+  // Dark toggle state
+  document.getElementById('darkToggle').checked = localStorage.getItem('voiceDiary_theme') === 'dark';
+}
+
+// Settings navigation
+document.getElementById('navDarkMode').addEventListener('click', () => openSettingsPage('settingsPageDark'));
+document.getElementById('navBackup').addEventListener('click',   () => openSettingsPage('settingsPageBackup'));
+document.getElementById('navAiModel').addEventListener('click',  () => openSettingsPage('settingsPageAi'));
+document.getElementById('backFromDark').addEventListener('click',   showSettingsMain);
+document.getElementById('backFromBackup').addEventListener('click', showSettingsMain);
+document.getElementById('backFromAi').addEventListener('click',     showSettingsMain);
+
 document.getElementById('settingsSignOutBtn').addEventListener('click', handleSignOut);
+
+// JSON import
+document.getElementById('importJsonBtn').addEventListener('click', () => {
+  document.getElementById('importJsonInput').click();
+});
+document.getElementById('importJsonInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error('올바른 백업 파일이 아닙니다');
+      saveEntries(data);
+      refreshActiveTab();
+      showToast(`${data.length}개의 일기를 불러왔습니다`);
+    } catch (err) {
+      showToast('가져오기 실패: ' + err.message);
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
 
 /* ═══════════════════════════════════════════
    DAY ACTIONS — 사진 / 내보내기 / 구글 캘린더
