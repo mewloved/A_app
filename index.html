@@ -640,6 +640,56 @@ body {
 }
 .day-action-btn:active { color: var(--navy); border-color: var(--navy); }
 
+/* 수기 입력 패널 */
+.day-write-panel {
+  margin-bottom: 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+}
+.day-write-textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--navy);
+  font-family: inherit;
+}
+.day-write-textarea::placeholder { color: var(--muted); }
+.day-write-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.day-write-cancel {
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+.day-write-save {
+  background: var(--navy);
+  border: none;
+  border-radius: 50px;
+  padding: 7px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+}
+.day-write-save:active { opacity: .85; }
+
 .day-photo-strip {
   display: flex;
   flex-wrap: wrap;
@@ -1494,6 +1544,9 @@ body {
       <div class="day-entries-head">
         <div class="day-entries-title" id="dayEntriesTitle"></div>
         <div class="day-entries-actions">
+          <button class="day-action-btn" id="dayWriteBtn" title="수기 입력">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
           <button class="day-action-btn" id="dayPhotoBtn" title="사진 추가">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           </button>
@@ -1503,6 +1556,20 @@ body {
           <button class="day-action-btn" id="dayGcalBtn" title="Google 캘린더에 추가">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
           </button>
+        </div>
+      </div>
+
+      <!-- 수기 입력 패널 (토글) -->
+      <div class="day-write-panel" id="dayWritePanel" style="display:none">
+        <textarea
+          class="day-write-textarea"
+          id="dayWriteTextarea"
+          placeholder="이 날의 일기를 직접 입력하세요…"
+          rows="4"
+        ></textarea>
+        <div class="day-write-actions">
+          <button class="day-write-cancel" id="dayWriteCancel">취소</button>
+          <button class="day-write-save" id="dayWriteSave">저장</button>
         </div>
       </div>
       <input type="file" id="dayPhotoInput" accept="image/*" multiple style="display:none">
@@ -1801,6 +1868,38 @@ function addEntry(text) {
     const id = Date.now();
     const entry = { id, text: text.trim(), date: dateStr, ts: now.toISOString() };
     entries.unshift(entry);
+    saveEntries(entries);
+    if (_uid) {
+      setSyncBadge('syncing');
+      fsEntries().doc(String(id)).set(entry)
+        .then(() => setSyncBadge('synced'))
+        .catch(() => setSyncBadge('error'));
+    }
+  }
+}
+
+// 특정 날짜에 수기로 항목 추가 (오늘이 아닌 날도 가능)
+function addEntryForDate(text, dateStr) {
+  const entries = loadEntries();
+  const existing = entries.find(e => e.date === dateStr);
+  // 날짜의 정오 시각으로 ts 설정 (과거 날짜여도 자연스럽게)
+  const [y, m, d] = dateStr.split('-');
+  const ts = new Date(+y, +m - 1, +d, 12, 0, 0).toISOString();
+
+  if (existing) {
+    existing.text = existing.text + ' ' + text.trim();
+    saveEntries(entries);
+    if (_uid) {
+      setSyncBadge('syncing');
+      fsEntries().doc(String(existing.id)).update({ text: existing.text })
+        .then(() => setSyncBadge('synced'))
+        .catch(() => setSyncBadge('error'));
+    }
+  } else {
+    const id = Date.now();
+    const entry = { id, text: text.trim(), date: dateStr, ts };
+    entries.unshift(entry);
+    entries.sort((a, b) => b.ts.localeCompare(a.ts));
     saveEntries(entries);
     if (_uid) {
       setSyncBadge('syncing');
@@ -2823,7 +2922,40 @@ let _dayActionDate = null;
 
 function _bindDayActions(dateStr) {
   _dayActionDate = dateStr;
+  // 다른 날 탭하면 입력 패널 닫기
+  document.getElementById('dayWritePanel').style.display = 'none';
+  document.getElementById('dayWriteTextarea').value = '';
 }
+
+// 수기 입력 토글
+const dayWritePanel = document.getElementById('dayWritePanel');
+const dayWriteTextarea = document.getElementById('dayWriteTextarea');
+
+document.getElementById('dayWriteBtn').addEventListener('click', () => {
+  const isOpen = dayWritePanel.style.display !== 'none';
+  dayWritePanel.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    dayWriteTextarea.value = '';
+    dayWriteTextarea.focus();
+  }
+});
+
+document.getElementById('dayWriteCancel').addEventListener('click', () => {
+  dayWritePanel.style.display = 'none';
+  dayWriteTextarea.value = '';
+});
+
+document.getElementById('dayWriteSave').addEventListener('click', () => {
+  const text = dayWriteTextarea.value.trim();
+  if (!text) { showToast('내용을 입력해주세요'); return; }
+  if (!_dayActionDate) return;
+  addEntryForDate(text, _dayActionDate);
+  dayWriteTextarea.value = '';
+  dayWritePanel.style.display = 'none';
+  renderDayEntries(_dayActionDate);
+  renderCalendar();
+  showToast('저장되었습니다');
+});
 
 // 사진 추가
 document.getElementById('dayPhotoBtn').addEventListener('click', () => {
