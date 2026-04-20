@@ -757,6 +757,109 @@ body {
 }
 
 /* ── LIST VIEW ── */
+
+/* 타임라인 섹션 헤더 */
+.tl-section-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 20px 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+.tl-section-header svg { flex-shrink: 0; }
+
+/* 타임라인 엔트리 행 */
+.tl-entry {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+  cursor: default;
+}
+.tl-entry:last-child { border-bottom: none; }
+
+/* 왼쪽: 날짜 숫자 + 요일 */
+.tl-date-col {
+  flex-shrink: 0;
+  width: 36px;
+  text-align: center;
+  padding-top: 2px;
+}
+.tl-day-num {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--navy);
+  line-height: 1;
+}
+.tl-day-num.sun { color: #c0392b; }
+.tl-day-num.sat { color: #2980b9; }
+.tl-day-dow {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+.tl-day-dow.sun { color: #c0392b; }
+.tl-day-dow.sat { color: #2980b9; }
+
+/* 가운데: 내용 */
+.tl-body { flex: 1; min-width: 0; }
+.tl-date-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 5px;
+}
+.tl-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-all;
+}
+.tl-text.expanded { display: block; }
+.tl-time {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.tl-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+.tl-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+/* 오른쪽: 사진 썸네일 */
+.tl-photo {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
 .list-panel .entry-card {
   background: var(--surface);
   border-radius: 18px;
@@ -2342,139 +2445,190 @@ function renderList() {
     return;
   }
 
-  const groups = {};
-  entries.forEach(e => { (groups[e.date] = groups[e.date] || []).push(e); });
   listContent.innerHTML = '';
 
-  Object.keys(groups).sort((a,b) => b.localeCompare(a)).forEach(dateStr => {
+  // 날짜별로 그룹핑 (가장 최근 항목 하나씩 대표)
+  const byDate = {};
+  entries.forEach(e => { (byDate[e.date] = byDate[e.date] || []).push(e); });
+  const dates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+
+  // 섹션 분류
+  const today = toDateStr(now0);
+  const yesterday = toDateStr(new Date(now0.getTime() - 86400000));
+  const weekAgo = toDateStr(new Date(now0.getTime() - 7 * 86400000));
+  const monthStart = `${now0.getFullYear()}-${String(now0.getMonth() + 1).padStart(2,'0')}-01`;
+
+  function getSectionKey(dateStr) {
+    if (dateStr === today)     return '오늘';
+    if (dateStr === yesterday) return '어제';
+    if (dateStr > weekAgo)     return '이번 주';
+    const [y, m] = dateStr.split('-');
+    const [ty, tm] = today.split('-');
+    if (y === ty && m === tm)  return '이번 달';
+    return `${+y}년 ${+m}월`;
+  }
+
+  let lastSection = null;
+  const calSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+
+  dates.forEach(dateStr => {
+    const section = getSectionKey(dateStr);
+    if (section !== lastSection) {
+      const hdr = document.createElement('div');
+      hdr.className = 'tl-section-header';
+      hdr.innerHTML = `${calSvg} ${section}`;
+      listContent.appendChild(hdr);
+      lastSection = section;
+    }
+
     const [y, m, d] = dateStr.split('-');
-    const dow = new Date(+y, +m-1, +d).getDay();
+    const dow = new Date(+y, +m - 1, +d).getDay();
+    const dateEntries = byDate[dateStr];
+    // 날짜별로 하나의 행으로 묶어 표시 (텍스트는 병합)
+    const combinedText = dateEntries.map(e => e.text).join(' ');
+    const firstEntry   = dateEntries[0];
+    const photos       = loadPhotosLocal(dateStr);
 
-    const hdr = document.createElement('div');
-    hdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin:18px 0 10px';
-    hdr.textContent = `${+y}년 ${+m}월 ${+d}일 ${DAYS_KO[dow]}요일`;
-    listContent.appendChild(hdr);
+    const row = document.createElement('div');
+    row.className = 'tl-entry';
 
-    groups[dateStr].forEach(entry => {
-      const card = document.createElement('div');
-      card.className = 'entry-card';
+    // 왼쪽: 날짜 숫자 + 요일
+    const dateCol = document.createElement('div');
+    dateCol.className = 'tl-date-col';
+    const dayNum = document.createElement('div');
+    dayNum.className = 'tl-day-num' + (dow === 0 ? ' sun' : dow === 6 ? ' sat' : '');
+    dayNum.textContent = +d;
+    const dayDow = document.createElement('div');
+    dayDow.className = 'tl-day-dow' + (dow === 0 ? ' sun' : dow === 6 ? ' sat' : '');
+    dayDow.textContent = DAYS_KO[dow];
+    dateCol.append(dayNum, dayDow);
 
-      const dateEl    = document.createElement('div');
-      dateEl.className = 'entry-card-date';
-      dateEl.textContent = formatDateTime(entry.ts);
+    // 가운데: 날짜 전체 + 텍스트 + 시간 + 배지 + 액션
+    const body = document.createElement('div');
+    body.className = 'tl-body';
 
-      const textEl    = document.createElement('div');
-      textEl.className = 'entry-card-text';
-      textEl.textContent = entry.text;
+    const dateLabel = document.createElement('div');
+    dateLabel.className = 'tl-date-label';
+    dateLabel.textContent = `${+y}년 ${+m}월 ${+d}일 ${DAYS_KO[dow]}요일`;
 
-      const moreEl    = document.createElement('div');
-      moreEl.className = 'entry-card-more';
+    const textEl = document.createElement('div');
+    textEl.className = 'tl-text';
+    textEl.textContent = combinedText;
 
-      const actionsEl = document.createElement('div');
-      actionsEl.className = 'entry-card-actions';
+    const timeEl = document.createElement('div');
+    timeEl.className = 'tl-time';
+    timeEl.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${formatDateTime(firstEntry.ts)}`;
 
-      const editBtn = document.createElement('button');
-      editBtn.className = 'btn-edit';
-      editBtn.textContent = '수정';
+    body.append(dateLabel, textEl, timeEl);
 
-      const delBtn  = document.createElement('button');
-      delBtn.className = 'btn-del';
-      delBtn.textContent = '삭제';
-
-      const aiBtn = document.createElement('button');
-      aiBtn.className = 'btn-ai';
-      aiBtn.style.cssText = 'font-size:11px;padding:5px 10px;flex:none;';
-      aiBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41"/></svg> AI 분석`;
-      aiBtn.addEventListener('click', () => runAiAnalysis(entry.id, entry.text, aiBtn));
-
-      actionsEl.append(aiBtn, editBtn, delBtn);
-
-      // 저장된 AI 분석 결과 배지 표시
-      const metaEl = document.createElement('div');
-      metaEl.className = 'entry-card-meta';
-      if (entry.emotion) {
-        const emEl = document.createElement('span');
-        emEl.className = 'entry-meta-emotion';
-        emEl.textContent = entry.emotion;
-        metaEl.appendChild(emEl);
-      }
-      if (Array.isArray(entry.keywords) && entry.keywords.length) {
-        entry.keywords.forEach(kw => {
-          const kwEl = document.createElement('span');
-          kwEl.className = 'entry-meta-kw';
-          kwEl.textContent = kw;
-          metaEl.appendChild(kwEl);
-        });
-      }
-
-      card.append(dateEl, textEl, moreEl);
-      renderEntryPhotos(card, entry.date);
-      if (metaEl.childElementCount) card.appendChild(metaEl);
-      card.appendChild(actionsEl);
-      listContent.appendChild(card);
-
-      requestAnimationFrame(() => {
-        if (textEl.scrollHeight > textEl.clientHeight + 4) {
-          moreEl.textContent = '더 보기';
-          moreEl.style.display = 'block';
-          moreEl.addEventListener('click', () => {
-            textEl.classList.toggle('expanded');
-            moreEl.textContent = textEl.classList.contains('expanded') ? '접기' : '더 보기';
-          });
+    // 감정/키워드 배지
+    const hasMeta = dateEntries.some(e => e.emotion || e.keywords?.length);
+    if (hasMeta) {
+      const metaRow = document.createElement('div');
+      metaRow.className = 'tl-meta-row';
+      dateEntries.forEach(e => {
+        if (e.emotion) {
+          const em = document.createElement('span');
+          em.className = 'entry-meta-emotion';
+          em.textContent = e.emotion;
+          metaRow.appendChild(em);
         }
-      });
-
-      delBtn.addEventListener('click', () => {
-        if (confirm('이 항목을 삭제할까요?')) { deleteEntry(entry.id); renderList(); }
-      });
-
-      editBtn.addEventListener('click', () => {
-        const textarea = document.createElement('textarea');
-        textarea.className = 'entry-edit-area';
-        textarea.value = entry.text;
-
-        const saveEl   = document.createElement('button');
-        saveEl.className = 'btn-edit-save';
-        saveEl.textContent = '저장';
-
-        const cancelEl = document.createElement('button');
-        cancelEl.className = 'btn-edit-cancel';
-        cancelEl.textContent = '취소';
-
-        const editActionsEl = document.createElement('div');
-        editActionsEl.className = 'entry-card-actions';
-        editActionsEl.append(cancelEl, saveEl);
-
-        textEl.style.display = 'none';
-        moreEl.style.display = 'none';
-        actionsEl.style.display = 'none';
-        card.insertBefore(textarea, actionsEl);
-        card.appendChild(editActionsEl);
-        textarea.focus();
-        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-
-        saveEl.addEventListener('click', () => {
-          const newText = textarea.value.trim();
-          if (!newText) { showToast('내용을 입력해 주세요'); return; }
-          updateEntry(entry.id, newText);
-          entry.text = newText;
-          textEl.textContent = newText;
-          textEl.classList.remove('expanded');
-          textEl.style.display = '';
-          moreEl.style.display = 'none';
-          actionsEl.style.display = '';
-          textarea.remove();
-          editActionsEl.remove();
-          showToast('수정되었습니다');
+        (e.keywords || []).forEach(kw => {
+          const k = document.createElement('span');
+          k.className = 'entry-meta-kw';
+          k.textContent = kw;
+          metaRow.appendChild(k);
         });
+      });
+      body.appendChild(metaRow);
+    }
 
-        cancelEl.addEventListener('click', () => {
-          textEl.style.display = '';
-          moreEl.style.display = '';
-          actionsEl.style.display = '';
-          textarea.remove();
-          editActionsEl.remove();
+    // 수정/삭제/AI 액션
+    const actionsEl = document.createElement('div');
+    actionsEl.className = 'tl-actions';
+
+    const aiBtn = document.createElement('button');
+    aiBtn.className = 'btn-ai';
+    aiBtn.style.cssText = 'font-size:11px;padding:5px 10px;';
+    aiBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41"/></svg> AI 분석`;
+    aiBtn.addEventListener('click', () => runAiAnalysis(firstEntry.id, combinedText, aiBtn));
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-edit';
+    editBtn.textContent = '수정';
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-del';
+    delBtn.textContent = '삭제';
+
+    actionsEl.append(aiBtn, editBtn, delBtn);
+    body.appendChild(actionsEl);
+
+    // 오른쪽: 사진 썸네일
+    let photoEl = null;
+    if (photos.length) {
+      photoEl = document.createElement('img');
+      photoEl.className = 'tl-photo';
+      photoEl.src = photos[0];
+      photoEl.addEventListener('click', () => openLightbox(photos[0]));
+    }
+
+    row.append(dateCol, body);
+    if (photoEl) row.appendChild(photoEl);
+    listContent.appendChild(row);
+
+    // 더 보기 (텍스트 길면)
+    requestAnimationFrame(() => {
+      if (textEl.scrollHeight > textEl.clientHeight + 4) {
+        textEl.style.cursor = 'pointer';
+        textEl.addEventListener('click', () => {
+          textEl.classList.toggle('expanded');
         });
+      }
+    });
+
+    delBtn.addEventListener('click', () => {
+      if (!confirm('이 날의 기록을 삭제할까요?')) return;
+      dateEntries.forEach(e => deleteEntry(e.id));
+      renderList();
+    });
+
+    editBtn.addEventListener('click', () => {
+      const textarea = document.createElement('textarea');
+      textarea.className = 'entry-edit-area';
+      textarea.value = combinedText;
+      const saveEl = document.createElement('button');
+      saveEl.className = 'btn-edit-save';
+      saveEl.textContent = '저장';
+      const cancelEl = document.createElement('button');
+      cancelEl.className = 'btn-edit-cancel';
+      cancelEl.textContent = '취소';
+      const editActs = document.createElement('div');
+      editActs.className = 'tl-actions';
+      editActs.append(cancelEl, saveEl);
+
+      textEl.style.display = 'none';
+      actionsEl.style.display = 'none';
+      body.insertBefore(textarea, timeEl);
+      body.appendChild(editActs);
+      textarea.focus();
+
+      saveEl.addEventListener('click', () => {
+        const newText = textarea.value.trim();
+        if (!newText) { showToast('내용을 입력해 주세요'); return; }
+        updateEntry(firstEntry.id, newText);
+        textEl.textContent = newText;
+        textEl.style.display = '';
+        actionsEl.style.display = '';
+        textarea.remove();
+        editActs.remove();
+        showToast('수정되었습니다');
+      });
+      cancelEl.addEventListener('click', () => {
+        textEl.style.display = '';
+        actionsEl.style.display = '';
+        textarea.remove();
+        editActs.remove();
       });
     });
   });
@@ -2976,22 +3130,24 @@ document.getElementById('dayPhotoInput').addEventListener('change', async (e) =>
   renderCalendar(); // 달력 셀 사진 즉시 반영
 });
 
-// 텍스트 내보내기 (해당 날짜)
+// 클립보드 복사 (해당 날짜)
 document.getElementById('dayExportBtn').addEventListener('click', () => {
   if (!_dayActionDate) return;
   const entries = loadEntries().filter(e => e.date === _dayActionDate);
   if (!entries.length) { showToast('이 날의 기록이 없습니다'); return; }
   const [y, m, d] = _dayActionDate.split('-');
-  let txt = `■ Voice Diary — ${+y}년 ${+m}월 ${+d}일\n${'─'.repeat(28)}\n\n`;
+  const dow = new Date(+y, +m-1, +d).getDay();
+  // 첫 줄: 날짜, 이후 내용
+  let txt = `${+y}년 ${+m}월 ${+d}일 ${DAYS_KO[dow]}요일\n`;
   entries.forEach(e => {
-    txt += `[${formatDateTime(e.ts)}]\n${e.text}\n`;
-    if (e.emotion)        txt += `감정: ${e.emotion}\n`;
-    if (e.keywords?.length) txt += `키워드: ${e.keywords.join(', ')}\n`;
-    if (e.summary)        txt += `요약: ${e.summary}\n`;
+    txt += e.text;
+    if (e.emotion)          txt += `\n감정: ${e.emotion}`;
+    if (e.keywords?.length) txt += `\n키워드: ${e.keywords.join(', ')}`;
     txt += '\n';
   });
-  downloadFile(txt, `diary-${_dayActionDate}.txt`, 'text/plain;charset=utf-8');
-  showToast('텍스트 파일로 내보냈어요');
+  navigator.clipboard.writeText(txt.trim())
+    .then(() => showToast('클립보드에 복사됐어요'))
+    .catch(() => showToast('복사 실패 — 브라우저 권한을 확인해주세요'));
 });
 
 // 구글 캘린더 추가 (URL 방식 — 추가 인증 불필요)
