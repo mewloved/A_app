@@ -3,6 +3,10 @@ firebase.config.local.js
 .env
 .env.local
 
+# Build output
+dist/
+.vercel/
+
 # OS
 .DS_Store
 Thumbs.db
