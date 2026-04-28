@@ -2307,6 +2307,7 @@ try {
 }
 
 const app  = initializeApp(firebaseConfig);
+console.log('[Firebase] config loaded:', JSON.stringify(firebaseConfig));
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
@@ -2421,7 +2422,10 @@ function renderUserBtn(user) {
   }
 }
 
-document.getElementById('googleSignInBtn').addEventListener('click', signInWithGoogle);
+document.getElementById('googleSignInBtn').addEventListener('click', () => {
+  console.log('[Auth] auth object:', auth);
+  signInWithGoogle();
+});
 document.getElementById('userBtn').addEventListener('click', handleSignOut);
 
 // 인증 상태 감지 — 단일 진입점
