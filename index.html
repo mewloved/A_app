@@ -2288,17 +2288,23 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 /* ═══════════════════════════════════════════
-   FIREBASE SETUP
+   FIREBASE SETUP — config fetched from /api/config at runtime
 ═══════════════════════════════════════════ */
-const firebaseConfig = {
-  apiKey: "__FB_API_KEY__",
-  authDomain: "__FB_AUTH_DOMAIN__",
-  projectId: "__FB_PROJECT_ID__",
-  storageBucket: "__FB_STORAGE_BUCKET__",
-  messagingSenderId: "__FB_MESSAGING_SENDER_ID__",
-  appId: "__FB_APP_ID__",
-  measurementId: "__FB_MEASUREMENT_ID__"
-};
+let firebaseConfig;
+try {
+  const _res = await fetch('/api/config');
+  if (!_res.ok) throw new Error(`/api/config returned HTTP ${_res.status}`);
+  firebaseConfig = await _res.json();
+  if (firebaseConfig.error) throw new Error(firebaseConfig.error);
+} catch (e) {
+  console.error('[Firebase] Config fetch failed:', e);
+  const overlay = document.getElementById('loginOverlay');
+  if (overlay) {
+    overlay.innerHTML = `<div style="color:#f88;font-family:sans-serif;text-align:center;padding:48px 24px;line-height:1.7">
+      앱 설정을 불러오지 못했어요.<br><small style="opacity:.6">${e.message}</small></div>`;
+  }
+  throw e;
+}
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
