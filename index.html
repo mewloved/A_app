@@ -2288,26 +2288,19 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 /* ═══════════════════════════════════════════
-   FIREBASE SETUP — config fetched from /api/config at runtime
+   FIREBASE SETUP
 ═══════════════════════════════════════════ */
-let firebaseConfig;
-try {
-  const _res = await fetch('/api/config');
-  if (!_res.ok) throw new Error(`/api/config returned HTTP ${_res.status}`);
-  firebaseConfig = await _res.json();
-  if (firebaseConfig.error) throw new Error(firebaseConfig.error);
-} catch (e) {
-  console.error('[Firebase] Config fetch failed:', e);
-  const overlay = document.getElementById('loginOverlay');
-  if (overlay) {
-    overlay.innerHTML = `<div style="color:#f88;font-family:sans-serif;text-align:center;padding:48px 24px;line-height:1.7">
-      앱 설정을 불러오지 못했어요.<br><small style="opacity:.6">${e.message}</small></div>`;
-  }
-  throw e;
-}
+const firebaseConfig = {
+  apiKey:            "AIzaSyAgR0wqWIFqPtLJHIVWhYxyGFHA2lyv08g",
+  authDomain:        "a-mew-project.firebaseapp.com",
+  projectId:         "a-mew-project",
+  storageBucket:     "a-mew-project.firebasestorage.app",
+  messagingSenderId: "816285168871",
+  appId:             "1:816285168871:web:fe8a19353389bcc1a09e42",
+  measurementId:     "G-C8822SGJQT",
+};
 
 const app  = initializeApp(firebaseConfig);
-console.log('[Firebase] config loaded:', JSON.stringify(firebaseConfig));
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
