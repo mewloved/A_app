@@ -1458,6 +1458,17 @@ body {
   letter-spacing: 0.03em;
   box-shadow: 0 4px 20px rgba(13,27,46,.22);
 }
+.toast.error {
+  white-space: pre-wrap;
+  word-break: break-all;
+  border-radius: 14px;
+  max-width: min(360px, 90vw);
+  text-align: left;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 12px 18px;
+}
 
 .toast.show {
   opacity: 1;
@@ -2349,7 +2360,7 @@ auth.getRedirectResult().catch(err => {
   console.error('  code   :', err.code);
   console.error('  message:', err.message);
   console.error('  full   :', err);
-  showToast(`로그인 오류 [${err.code || 'unknown'}]: ${err.message || err}`);
+  showToast(`code: ${err.code || 'unknown'}\n${err.message || err}`, { duration: 8000, error: true });
 });
 
 function handleSignOut() {
@@ -2538,12 +2549,13 @@ function formatDateTime(isoStr) {
    TOAST
 ═══════════════════════════════════════════ */
 let toastTimer;
-function showToast(msg) {
+function showToast(msg, { duration = 2000, error = false } = {}) {
   const t = document.getElementById('toast');
   t.textContent = msg;
+  t.classList.toggle('error', error);
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+  toastTimer = setTimeout(() => t.classList.remove('show'), duration);
 }
 
 /* ═══════════════════════════════════════════
