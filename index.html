@@ -2345,8 +2345,11 @@ function signInWithGoogle() {
 
 // 리다이렉트 후 복귀 시 결과 처리 (onAuthStateChanged가 로그인 상태를 처리)
 auth.getRedirectResult().catch(err => {
-  console.warn('[Auth] redirect result error:', err);
-  showToast('로그인 중 오류가 발생했어요');
+  console.error('[Auth] getRedirectResult error');
+  console.error('  code   :', err.code);
+  console.error('  message:', err.message);
+  console.error('  full   :', err);
+  showToast(`로그인 오류 [${err.code || 'unknown'}]: ${err.message || err}`);
 });
 
 function handleSignOut() {
