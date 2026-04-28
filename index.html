@@ -3,10 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<!-- Firebase compat SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<!-- Firebase modular SDK (ES modules via CDN) -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <title>MEW DIARY</title>
 <style>
@@ -2277,7 +2274,19 @@ body {
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script type="module">
+import { initializeApp }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import {
+  getAuth, GoogleAuthProvider, setPersistence, browserSessionPersistence,
+  signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged,
+  useDeviceLanguage
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import {
+  getFirestore, collection, doc, query, orderBy,
+  getDocs, setDoc, updateDoc, deleteDoc, onSnapshot
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
 /* ═══════════════════════════════════════════
    FIREBASE SETUP
 ═══════════════════════════════════════════ */
@@ -2291,9 +2300,9 @@ const firebaseConfig = {
   measurementId: "__FB_MEASUREMENT_ID__"
 };
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db   = firebase.firestore();
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
 
 let _uid = null;
 let _lastSyncTime = null;
@@ -2305,7 +2314,10 @@ function setSyncBadge(state) {
 }
 
 function fsEntries() {
-  return db.collection('users').doc(_uid).collection('entries');
+  return collection(db, 'users', _uid, 'entries');
+}
+function fsEntryDoc(id) {
+  return doc(db, 'users', _uid, 'entries', String(id));
 }
 
 // Firestore → localStorage 전체 덮어쓰기
@@ -2313,7 +2325,7 @@ async function pullFromFirestore() {
   if (!_uid) return;
   setSyncBadge('syncing');
   try {
-    const snap = await fsEntries().orderBy('ts', 'desc').get();
+    const snap = await getDocs(query(fsEntries(), orderBy('ts', 'desc')));
     const entries = snap.docs.map(d => d.data());
     saveEntries(entries);
     refreshActiveTab();
@@ -2328,9 +2340,7 @@ async function pullFromFirestore() {
 let _unsubscribe = null;
 function startRealtimeSync() {
   if (_unsubscribe) _unsubscribe();
-  _unsubscribe = fsEntries()
-    .orderBy('ts', 'desc')
-    .onSnapshot(snap => {
+  _unsubscribe = onSnapshot(query(fsEntries(), orderBy('ts', 'desc')), snap => {
       const entries = snap.docs.map(d => d.data());
       saveEntries(entries);
       refreshActiveTab();
@@ -2345,16 +2355,16 @@ function refreshActiveTab() {
 }
 
 /* ── 구글 로그인 ── */
-const googleProvider = new firebase.auth.GoogleAuthProvider();
+const googleProvider = new GoogleAuthProvider();
 // 매번 계정 선택 화면 표시 (iOS에서 세션 충돌 방지)
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 // 기기 언어로 UI 표시
-auth.useDeviceLanguage();
+useDeviceLanguage(auth);
 
 function signInWithGoogle() {
   // Safari ITP 우회: localStorage 대신 sessionStorage 사용 후 redirect
-  auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
-    .then(() => auth.signInWithRedirect(googleProvider))
+  setPersistence(auth, browserSessionPersistence)
+    .then(() => signInWithRedirect(auth, googleProvider))
     .catch(err => {
       console.error('[Auth] signInWithRedirect error');
       console.error('  code   :', err.code);
@@ -2364,7 +2374,7 @@ function signInWithGoogle() {
 }
 
 // 리다이렉트 후 복귀 시 결과 처리 (onAuthStateChanged가 로그인 상태를 처리)
-auth.getRedirectResult()
+getRedirectResult(auth)
   .then(result => {
     if (result && result.user) {
       console.log('[Auth] redirect success:', result.user.email);
@@ -2382,7 +2392,7 @@ function handleSignOut() {
   if (!confirm('로그아웃할까요?')) return;
   if (_unsubscribe) { _unsubscribe(); _unsubscribe = null; }
   _uid = null;
-  auth.signOut();
+  signOut(auth);
 }
 
 function renderUserBtn(user) {
@@ -2409,7 +2419,7 @@ document.getElementById('googleSignInBtn').addEventListener('click', signInWithG
 document.getElementById('userBtn').addEventListener('click', handleSignOut);
 
 // 인증 상태 감지 — 단일 진입점
-auth.onAuthStateChanged(user => {
+onAuthStateChanged(auth, user => {
   const overlay = document.getElementById('loginOverlay');
   if (!user) {
     // 로그아웃 상태
@@ -2457,7 +2467,7 @@ function addEntry(text) {
       setSyncBadge('syncing');
       const upd = { text: existing.text };
       if (loc && !existing.location) upd.location = loc;
-      fsEntries().doc(String(existing.id)).update(upd)
+      updateDoc(fsEntryDoc(existing.id), upd)
         .then(() => setSyncBadge('synced'))
         .catch(() => setSyncBadge('error'));
     }
@@ -2469,7 +2479,7 @@ function addEntry(text) {
     saveEntries(entries);
     if (_uid) {
       setSyncBadge('syncing');
-      fsEntries().doc(String(id)).set(entry)
+      setDoc(fsEntryDoc(id), entry)
         .then(() => setSyncBadge('synced'))
         .catch(() => setSyncBadge('error'));
     }
@@ -2489,7 +2499,7 @@ function addEntryForDate(text, dateStr) {
     saveEntries(entries);
     if (_uid) {
       setSyncBadge('syncing');
-      fsEntries().doc(String(existing.id)).update({ text: existing.text })
+      updateDoc(fsEntryDoc(existing.id), { text: existing.text })
         .then(() => setSyncBadge('synced'))
         .catch(() => setSyncBadge('error'));
     }
@@ -2501,7 +2511,7 @@ function addEntryForDate(text, dateStr) {
     saveEntries(entries);
     if (_uid) {
       setSyncBadge('syncing');
-      fsEntries().doc(String(id)).set(entry)
+      setDoc(fsEntryDoc(id), entry)
         .then(() => setSyncBadge('synced'))
         .catch(() => setSyncBadge('error'));
     }
@@ -2517,7 +2527,7 @@ function deleteEntry(id, date) {
   }
   if (_uid) {
     setSyncBadge('syncing');
-    fsEntries().doc(String(id)).delete()
+    deleteDoc(fsEntryDoc(id))
       .then(() => setSyncBadge('synced'))
       .catch(() => setSyncBadge('error'));
   }
@@ -2530,7 +2540,7 @@ function updateEntry(id, newText) {
   saveEntries(entries);
   if (_uid) {
     setSyncBadge('syncing');
-    fsEntries().doc(String(id)).update({ text: newText.trim() })
+    updateDoc(fsEntryDoc(id), { text: newText.trim() })
       .then(() => setSyncBadge('synced'))
       .catch(() => setSyncBadge('error'));
   }
@@ -2545,7 +2555,7 @@ function saveEntryMeta(id, meta) {
   saveEntries(entries);
   if (_uid) {
     setSyncBadge('syncing');
-    fsEntries().doc(String(id)).update(meta)
+    updateDoc(fsEntryDoc(id), meta)
       .then(() => setSyncBadge('synced'))
       .catch(() => setSyncBadge('error'));
   }
