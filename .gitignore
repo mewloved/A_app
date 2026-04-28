@@ -1,0 +1,12 @@
+# Firebase local config (never commit real values)
+firebase.config.local.js
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
