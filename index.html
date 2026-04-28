@@ -2346,22 +2346,37 @@ function refreshActiveTab() {
 
 /* ── 구글 로그인 ── */
 const googleProvider = new firebase.auth.GoogleAuthProvider();
+// 매번 계정 선택 화면 표시 (iOS에서 세션 충돌 방지)
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+// 기기 언어로 UI 표시
+auth.useDeviceLanguage();
 
 function signInWithGoogle() {
-  auth.signInWithRedirect(googleProvider).catch(err => {
-    console.warn('[Auth] redirect error:', err);
-    showToast('로그인 중 오류가 발생했어요');
-  });
+  // Safari ITP 우회: localStorage 대신 sessionStorage 사용 후 redirect
+  auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+    .then(() => auth.signInWithRedirect(googleProvider))
+    .catch(err => {
+      console.error('[Auth] signInWithRedirect error');
+      console.error('  code   :', err.code);
+      console.error('  message:', err.message);
+      showToast(`code: ${err.code || 'unknown'}\n${err.message || err}`, { duration: 8000, error: true });
+    });
 }
 
 // 리다이렉트 후 복귀 시 결과 처리 (onAuthStateChanged가 로그인 상태를 처리)
-auth.getRedirectResult().catch(err => {
-  console.error('[Auth] getRedirectResult error');
-  console.error('  code   :', err.code);
-  console.error('  message:', err.message);
-  console.error('  full   :', err);
-  showToast(`code: ${err.code || 'unknown'}\n${err.message || err}`, { duration: 8000, error: true });
-});
+auth.getRedirectResult()
+  .then(result => {
+    if (result && result.user) {
+      console.log('[Auth] redirect success:', result.user.email);
+    }
+  })
+  .catch(err => {
+    console.error('[Auth] getRedirectResult error');
+    console.error('  code   :', err.code);
+    console.error('  message:', err.message);
+    console.error('  full   :', err);
+    showToast(`code: ${err.code || 'unknown'}\n${err.message || err}`, { duration: 8000, error: true });
+  });
 
 function handleSignOut() {
   if (!confirm('로그아웃할까요?')) return;
