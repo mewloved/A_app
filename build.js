@@ -1,8 +1,9 @@
 const fs = require('fs');
 
+// authDomain is hardcoded in index.html (a-mew-project.firebaseapp.com)
+// to ensure iOS Safari redirect flow works correctly — do not env-var it
 const ENV_MAP = {
   __FB_API_KEY__:             'FB_API_KEY',
-  __FB_AUTH_DOMAIN__:         'FB_AUTH_DOMAIN',
   __FB_PROJECT_ID__:          'FB_PROJECT_ID',
   __FB_STORAGE_BUCKET__:      'FB_STORAGE_BUCKET',
   __FB_MESSAGING_SENDER_ID__: 'FB_MESSAGING_SENDER_ID',

@@ -291,6 +291,42 @@ body {
   text-align: center; line-height: 1.7;
 }
 
+.login-overlay .login-divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 10px 0 8px;
+  color: rgba(160,140,220,0.35); font-size: 11px; letter-spacing: 1px;
+}
+.login-overlay .login-divider::before,
+.login-overlay .login-divider::after {
+  content: ''; flex: 1; height: 1px;
+  background: rgba(160,140,220,0.15);
+}
+.login-overlay .login-input {
+  width: 100%; padding: 13px 16px; margin-bottom: 8px;
+  border-radius: 14px; border: 1px solid rgba(160,140,220,0.2);
+  background: rgba(255,255,255,0.05);
+  color: #f0eaff; font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none; transition: border-color .2s;
+  -webkit-appearance: none;
+}
+.login-overlay .login-input::placeholder { color: rgba(160,140,220,0.35); }
+.login-overlay .login-input:focus { border-color: rgba(160,140,220,0.5); }
+.login-overlay .btn-email {
+  width: 100%; padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(160,140,220,0.25);
+  background: rgba(160,140,220,0.1);
+  color: #f0eaff; font-size: 14px; font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer; transition: background .2s;
+  margin-bottom: 10px;
+}
+.login-overlay .btn-email:active { background: rgba(160,140,220,0.22); }
+.login-overlay .login-email-links {
+  display: flex; justify-content: center; gap: 20px;
+}
+
 /* ── USER AVATAR ── */
 .user-btn {
   background: none;
@@ -1935,6 +1971,13 @@ body {
         Google로 계속하기
       </button>
       <div class="login-hint">로그인하면 모든 기기에서<br>일기를 동기화할 수 있어요</div>
+      <div class="login-divider">또는 이메일로</div>
+      <input class="login-input" id="loginEmail" type="email" placeholder="이메일" autocomplete="email" inputmode="email">
+      <input class="login-input" id="loginPassword" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password">
+      <button class="btn-email" id="emailSignInBtn">이메일로 로그인</button>
+      <div class="login-email-links">
+        <button class="login-hint" style="background:none;border:none;cursor:pointer;text-decoration:underline;" id="emailSignUpBtn">처음이에요 (회원가입)</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2283,7 +2326,7 @@ body {
 ═══════════════════════════════════════════ */
 const firebaseConfig = {
   apiKey: "__FB_API_KEY__",
-  authDomain: "__FB_AUTH_DOMAIN__",
+  authDomain: "a-mew-project.firebaseapp.com",
   projectId: "__FB_PROJECT_ID__",
   storageBucket: "__FB_STORAGE_BUCKET__",
   messagingSenderId: "__FB_MESSAGING_SENDER_ID__",
@@ -2406,6 +2449,42 @@ function renderUserBtn(user) {
 }
 
 document.getElementById('googleSignInBtn').addEventListener('click', signInWithGoogle);
+
+function emailSignIn() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw    = document.getElementById('loginPassword').value;
+  if (!email || !pw) { showToast('이메일과 비밀번호를 입력해주세요'); return; }
+  auth.signInWithEmailAndPassword(email, pw).catch(err => {
+    console.error('[Auth] email sign-in:', err.code, err.message);
+    const msg = { 'auth/wrong-password':    '비밀번호가 올바르지 않아요',
+                  'auth/invalid-credential':'이메일 또는 비밀번호를 확인해주세요',
+                  'auth/user-not-found':    '가입되지 않은 이메일이에요',
+                  'auth/invalid-email':     '이메일 형식이 올바르지 않아요' }[err.code]
+              || `오류 (${err.code})`;
+    showToast(msg);
+  });
+}
+
+function emailSignUp() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw    = document.getElementById('loginPassword').value;
+  if (!email || !pw) { showToast('이메일과 비밀번호를 입력해주세요'); return; }
+  if (pw.length < 6) { showToast('비밀번호는 6자 이상이어야 해요'); return; }
+  auth.createUserWithEmailAndPassword(email, pw).catch(err => {
+    console.error('[Auth] email sign-up:', err.code, err.message);
+    const msg = { 'auth/email-already-in-use': '이미 가입된 이메일이에요',
+                  'auth/weak-password':         '비밀번호가 너무 짧아요 (6자 이상)',
+                  'auth/invalid-email':          '이메일 형식이 올바르지 않아요' }[err.code]
+              || `오류 (${err.code})`;
+    showToast(msg);
+  });
+}
+
+document.getElementById('emailSignInBtn').addEventListener('click', emailSignIn);
+document.getElementById('emailSignUpBtn').addEventListener('click', emailSignUp);
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') emailSignIn();
+});
 document.getElementById('userBtn').addEventListener('click', handleSignOut);
 
 // 인증 상태 감지 — 단일 진입점
