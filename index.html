@@ -2337,11 +2337,17 @@ function refreshActiveTab() {
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
 function signInWithGoogle() {
-  auth.signInWithPopup(googleProvider).catch(err => {
-    console.warn('[Auth] popup error:', err);
+  auth.signInWithRedirect(googleProvider).catch(err => {
+    console.warn('[Auth] redirect error:', err);
     showToast('로그인 중 오류가 발생했어요');
   });
 }
+
+// 리다이렉트 후 복귀 시 결과 처리 (onAuthStateChanged가 로그인 상태를 처리)
+auth.getRedirectResult().catch(err => {
+  console.warn('[Auth] redirect result error:', err);
+  showToast('로그인 중 오류가 발생했어요');
+});
 
 function handleSignOut() {
   if (!confirm('로그아웃할까요?')) return;
