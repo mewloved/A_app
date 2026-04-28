@@ -3,6 +3,7 @@ const fs = require('fs');
 // authDomain is hardcoded — required for iOS Safari redirect flow
 const ENV_MAP = {
   __FB_API_KEY__:             'FB_API_KEY',
+  __FB_AUTH_DOMAIN__:         'FB_AUTH_DOMAIN',
   __FB_PROJECT_ID__:          'FB_PROJECT_ID',
   __FB_STORAGE_BUCKET__:      'FB_STORAGE_BUCKET',
   __FB_MESSAGING_SENDER_ID__: 'FB_MESSAGING_SENDER_ID',
